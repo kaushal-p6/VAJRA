@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="VAJRA - Village Alert & Just-in-time Risk Assessment. Operational Flash Flood & Landslide Decision-Support System for Emergency Officials in India.">
+  <title>VAJRA | Disaster-Management Decision-Support System</title>
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+
+  <!-- Light Mode Default Custom CSS -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+  <!-- ==========================================================================
+       Header & Real-Time IST GMT+5:30 Monotonic Bold Red Clock
+       ========================================================================== -->
+  <header class="app-header">
+    <div class="brand-container">
+      <div class="brand-logo">
+        <svg class="icon-svg icon-svg-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      </div>
+      <div class="brand-text">
+        <h1>VAJRA <span>EARLY WARNING</span></h1>
+        <div class="brand-subtitle">Village Alert & Just-in-time Risk Assessment</div>
+      </div>
+    </div>
+
+    <!-- Highlighted Bold RED Clock (No Container Box, Independent of System Clock) -->
+    <div class="ist-clock-box" id="ist-clock-box" title="Real-Time Indian Standard Time — syncing...">
+      <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      <span id="ist-clock-time">00:00:00 IST</span>
+      <span class="gmt-tag">GMT+5:30</span>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <nav class="nav-tabs">
+      <button class="nav-btn active" data-tab="dashboard" onclick="VajraUI.switchTab('dashboard')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/><line x1="8" y1="2" x2="8" y2="18"/><line x1="16" y1="6" x2="16" y2="22"/></svg>
+        <span>Dashboard Map</span>
+      </button>
+      <button class="nav-btn" data-tab="analyze" onclick="VajraUI.switchTab('analyze')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
+        <span>Analyze Telemetry</span>
+      </button>
+      <button class="nav-btn" data-tab="alerts" onclick="VajraUI.switchTab('alerts')">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span>Alert Management</span>
+      </button>
+    </nav>
+
+    <!-- Header Actions -->
+    <div class="header-right">
+      <button class="sim-btn" onclick="VajraUI.simulateMonsoonEvent()" title="Simulate Torrential Cloudburst Event">
+        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="16" y1="16" x2="16.01" y2="16"/></svg>
+        <span>Simulate Rain Event</span>
+      </button>
+
+      <!-- Notification Center Dropdown -->
+      <div class="notif-wrapper">
+        <button class="notif-icon-btn" onclick="VajraAlerts.toggleNotificationDrawer()" id="notif-trigger-btn" title="System Notifications">
+          <svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          <span class="notif-badge" id="notif-count-badge">2</span>
+        </button>
+
+        <div class="notif-dropdown" id="notif-dropdown">
+          <div class="notif-header">
+            <h4>
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+              <span>System Notifications</span>
+            </h4>
+            <span style="font-size: 0.72rem; color: #64748b;">Real-time Telemetry</span>
+          </div>
+          <div class="notif-body" id="notif-body-list">
+            <!-- Dynamic Notifications -->
+          </div>
+        </div>
+      </div>
+
+      <!-- Simple Login Button -->
+      <button class="simple-login-btn" id="auth-login-btn" onclick="VajraUI.openLoginModal()">
+        <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+        <span>LOGIN</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ==========================================================================
+       Main Application Container
+       ========================================================================== -->
+  <main class="main-container">
+
+    <!-- ==========================================================================
+         TAB 1: MAIN DASHBOARD PAGE (Operational Command View)
+         ========================================================================== -->
+    <section class="tab-page active" id="tab-dashboard">
+
+      <!-- KPI Overview Strip -->
+      <div class="kpi-strip">
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <p>Monitored Sectors</p>
+            <h3>14,820</h3>
+          </div>
+          <div class="kpi-card-icon" style="background: #eff6ff; color: #2563eb;">
+            <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <p>Active Extreme Risk</p>
+            <h3 id="kpi-red-alerts" style="color: var(--risk-red);">2</h3>
+          </div>
+          <div class="kpi-card-icon" style="background: #fef2f2; color: var(--risk-red);">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 1 1.71-3L13.71 3.86a2 2 0 0 1-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <p>Active High Warning</p>
+            <h3 id="kpi-orange-alerts" style="color: var(--risk-orange);">2</h3>
+          </div>
+          <div class="kpi-card-icon" style="background: #fff7ed; color: var(--risk-orange);">
+            <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <p>Avg Soil Moisture</p>
+            <h3 id="kpi-avg-soil">79.2%</h3>
+          </div>
+          <div class="kpi-card-icon" style="background: #f0fdf4; color: var(--risk-green);">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+          </div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-info">
+            <p>24h Max Rain</p>
+            <h3 id="kpi-max-rain">168 mm</h3>
+          </div>
+          <div class="kpi-card-icon" style="background: #e0f2fe; color: #0284c7;">
+            <svg class="icon-svg" viewBox="0 0 24 24"><line x1="16" y1="13" x2="16" y2="21"/><line x1="8" y1="13" x2="8" y2="21"/><line x1="12" y1="15" x2="12" y2="23"/><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/></svg>
+          </div>
+        </div>
+      </div>
+
+      <!-- Emergency Alert Box Banner -->
+      <div class="alert-box-banner" id="emergency-alert-banner">
+        <div class="alert-box-info">
+          <div class="alert-siren-icon">
+            <svg class="icon-svg icon-svg-lg" viewBox="0 0 24 24"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+          </div>
+          <div class="alert-box-text">
+            <h3 id="alert-banner-text">CRITICAL OPERATIONAL ALERT: IMPENDING LANDSLIDE IN BHATWARI (UTTARKASHI)</h3>
+            <p id="alert-banner-subtext">Risk Score: 94% | 24h Rain: 142mm | Exposed Population: ~420 citizens in hazard zone.</p>
+          </div>
+        </div>
+        <div class="alert-box-actions authorized-only">
+          <button class="btn-danger-action" onclick="VajraAlerts.openEmergencyDispatchModal()">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M15.54 8.46a5 5 0 0 1 0 7.07"/></svg>
+            <span>Dispatch Emergency Alert to Locals</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dashboard Grid Layout -->
+      <div class="dashboard-grid">
+        <div class="map-container-box">
+          <div id="map"></div>
+
+          <!-- Floating Map Controls & Operational Layers Toggle -->
+          <div class="map-overlay-controls">
+            <!-- Layers Control Drawer Button -->
+            <button class="map-layer-btn" id="map-layers-toggle-btn" onclick="VajraMap.toggleLayersDrawer()" title="Operational Map Layer Controls">
+              <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+              <span>Layers</span>
+            </button>
+
+            <span style="border-right: 1px solid #cbd5e1; height: 18px; margin: auto 2px;"></span>
+
+            <button class="map-layer-btn active" data-layer="satellite" onclick="VajraMap.switchLayer('satellite')">
+              <span>Satellite</span>
+            </button>
+            <button class="map-layer-btn" data-layer="standard" onclick="VajraMap.switchLayer('standard')">
+              <span>Standard</span>
+            </button>
+            <button class="map-layer-btn" data-layer="elevation" onclick="VajraMap.switchLayer('elevation')">
+              <span>DEM Topo</span>
+            </button>
+            <button class="map-layer-btn" data-layer="terrain" onclick="VajraMap.switchLayer('terrain')">
+              <span>Terrain</span>
+            </button>
+
+            <!-- Fullscreen Map Option -->
+            <button class="map-layer-btn" id="map-fullscreen-btn" onclick="VajraMap.toggleFullscreen()" title="Toggle Fullscreen Map View" style="border-left: 1px solid #cbd5e1; padding-left: 0.6rem;">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7"/></svg>
+              <span>Fullscreen</span>
+            </button>
+          </div>
+
+          <!-- Operational Map Layers Control Drawer Overlay -->
+          <div class="map-layers-drawer" id="map-layers-drawer">
+            <div class="layers-drawer-header">
+              <h4>
+                <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+                <span>MAP LAYERS CONTROL</span>
+              </h4>
+              <button class="modal-close-btn" onclick="VajraMap.toggleLayersDrawer()">✖</button>
+            </div>
+            <div class="layers-drawer-body">
+              <div>
+                <div class="layer-group-title">Risk Prediction (ML & Spatial)</div>
+                <label class="layer-checkbox-item">
+                  <span>🔴 Extreme Risk Zone</span>
+                  <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_extreme', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🟠 High Risk Zone</span>
+                  <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_high', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🟡 Moderate Risk Zone</span>
+                  <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_moderate', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🟢 Low Risk Zone</span>
+                  <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_low', this.checked)">
+                </label>
+              </div>
+
+              <div>
+                <div class="layer-group-title">Environmental Conditions</div>
+                <label class="layer-checkbox-item">
+                  <span>🌧 Rainfall Telemetry</span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>💧 Soil Moisture Layer</span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🌩 Rainfall Forecast Overlay</span>
+                  <input type="checkbox" checked>
+                </label>
+              </div>
+
+              <div>
+                <div class="layer-group-title">Terrain & Topography</div>
+                <label class="layer-checkbox-item">
+                  <span>⛰ Elevation & Contours</span>
+                  <input type="checkbox" checked>
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>📐 Slope Angle Units</span>
+                  <input type="checkbox" checked>
+                </label>
+              </div>
+
+              <div>
+                <div class="layer-group-title">Hazard History</div>
+                <label class="layer-checkbox-item">
+                  <span>📜 Historical Landslides (GSI Catalog)</span>
+                  <input type="checkbox" id="layer_hist_landslides" checked onchange="VajraMap.toggleOverlayGroup('layer_hist_landslides', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🌊 Historical Floods (CWC Records)</span>
+                  <input type="checkbox" id="layer_hist_floods" checked onchange="VajraMap.toggleOverlayGroup('layer_hist_floods', this.checked)">
+                </label>
+              </div>
+
+              <div>
+                <div class="layer-group-title">Exposure & Infrastructure</div>
+                <label class="layer-checkbox-item">
+                  <span>🏥 Emergency Hospitals</span>
+                  <input type="checkbox" id="layer_hospitals" checked onchange="VajraMap.toggleOverlayGroup('layer_hospitals', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🚒 Emergency Posts & Fire Stations</span>
+                  <input type="checkbox" id="layer_emergency_facilities" checked onchange="VajraMap.toggleOverlayGroup('layer_emergency_facilities', this.checked)">
+                </label>
+                <label class="layer-checkbox-item">
+                  <span>🛣 Safe High-Ground Routes</span>
+                  <input type="checkbox" checked>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dynamic Legend -->
+          <div class="map-legend">
+            <div class="legend-title">Risk Level Legend</div>
+            <div class="legend-items">
+              <div class="legend-item"><span class="legend-dot red"></span> Extreme</div>
+              <div class="legend-item"><span class="legend-dot orange"></span> High</div>
+              <div class="legend-item"><span class="legend-dot yellow"></span> Moderate</div>
+              <div class="legend-item"><span class="legend-dot green"></span> Low</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Location / Hazard Details Panel (Data-Honest Operational Inspector) -->
+        <aside class="side-panel">
+          <div class="side-panel-header">
+            <div>
+              <h3 id="inspector-village">Bhatwari, Uttarkashi</h3>
+              <div style="font-size: 0.75rem; color: #64748b;" id="inspector-state">Uttarakhand • Watershed: UK-BHAGIRATHI-WS01</div>
+              <div style="margin-top: 0.25rem;">
+                <span style="font-size: 0.68rem; background: #eff6ff; color: #1d4ed8; padding: 2px 6px; border-radius: 4px; border: 1px solid #bfdbfe; font-weight: 700;" id="inspector-ml-scope-tag">ML Prediction (Uttarkashi Pilot)</span>
+              </div>
+            </div>
+            <div style="display: flex; flex-direction: column; align-items: flex-end; gap: 0.2rem;">
+              <span class="risk-badge red" id="inspector-risk-badge">Extreme (94%) ↑</span>
+            </div>
+          </div>
+
+          <!-- Data Freshness & Data Quality Indicators -->
+          <div style="display: flex; align-items: center; justify-content: space-between; background: #f8fafc; padding: 0.4rem 0.65rem; border-radius: 6px; border: 1px solid #e2e8f0;">
+            <div class="data-freshness-tag">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+              <span id="inspector-freshness-time">Updated: 10 min ago</span>
+            </div>
+            <span class="quality-badge good" id="inspector-quality-badge">Data Quality: Good</span>
+          </div>
+
+          <!-- Model Input Conditions Grid -->
+          <div>
+            <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Model Input Conditions</div>
+            <div class="data-metric-grid">
+              <div class="metric-box">
+                <div class="metric-label">24h Rainfall</div>
+                <div class="metric-value" id="inspector-rain-24h" style="color: #2563eb;">142 mm</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Soil Moisture</div>
+                <div class="metric-value" id="inspector-soil-moisture" style="color: #ea580c;">94%</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Slope Angle</div>
+                <div class="metric-value" id="inspector-slope">38°</div>
+              </div>
+              <div class="metric-box">
+                <div class="metric-label">Elevation</div>
+                <div class="metric-value" id="inspector-elevation">1,420 m</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Hazard Window / Time-to-Impact -->
+          <div class="metric-box" style="background: #fef2f2; border-color: #fca5a5;">
+            <div class="metric-label" style="color: #991b1b;">Hazard Window / Impact Window</div>
+            <div class="metric-value" id="inspector-impact-time" style="color: var(--risk-red); font-size: 0.9rem;">Elevated risk expected during next 2-4 hours</div>
+          </div>
+
+          <!-- Main Risk Drivers -->
+          <div>
+            <h4 style="font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Main Risk Drivers (Model Inputs)</h4>
+            <ul class="factors-list" id="inspector-factors">
+              <li>
+                <strong style="color: #0f172a;">Torrential Rainfall (24h: 142mm)</strong> [High Contribution]<br/>
+                <span style="font-size: 0.72rem; color: #64748b;">Monsoon cloudburst accumulation in Bhagirathi catchment</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Rainfall Intelligence Accumulation Graph & Forecast -->
+          <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.65rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.72rem; font-weight: 800; color: #0f172a;">
+              <span>RAINFALL ACCUMULATION HISTORY</span>
+              <span style="color: #2563eb;">1h to 72h</span>
+            </div>
+            <div class="rainfall-accum-bar-container" id="inspector-rain-bars">
+              <!-- Dynamic Bars rendered by map.js -->
+            </div>
+            <div style="font-size: 0.72rem; color: #475569; margin-top: 0.4rem; font-weight: 600;" id="inspector-forecast-text">
+              Forecast (+24h): +45 mm expected (Open-Meteo GFS/ECMWF)
+            </div>
+          </div>
+
+          <!-- Terrain Details -->
+          <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 7px; padding: 0.55rem;">
+            <div class="metric-label">Terrain & Geo-Inputs</div>
+            <div style="font-size: 0.78rem; font-weight: 700; color: #334155; margin-top: 2px;" id="inspector-terrain-info">
+              Aspect: NW (315°) | Soil: Highly Fractured Slate | Cover: Dense Forest
+            </div>
+          </div>
+
+          <!-- Exposure Analysis -->
+          <div>
+            <h4 style="font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Exposure Analysis</h4>
+            <div style="background: #fff7ed; border: 1px solid #fdba74; border-radius: 8px; padding: 0.6rem; font-size: 0.8rem; color: #9a3412;">
+              <strong>Population within predicted hazard zone:</strong><br/>
+              <span id="inspector-population-exposure" style="font-weight: 800; font-size: 0.9rem; color: #c2410c;">~420 citizens within predicted hazard zone</span>
+            </div>
+            <div style="font-size: 0.74rem; color: #475569; margin-top: 0.35rem; font-weight: 600;" id="inspector-infrastructure-exposure">
+              Roads: NH-108 Gangotri Hwy | Hosp: Bhatwari Primary Health Center
+            </div>
+          </div>
+
+          <!-- Historical Event Timeline -->
+          <div>
+            <h4 style="font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Historical Event Catalog Timeline</h4>
+            <div class="timeline-container" id="inspector-timeline">
+              <!-- Rendered dynamically -->
+            </div>
+          </div>
+
+          <!-- Potential Safe Area / Candidate Safe High-Ground Card -->
+          <div class="candidate-safe-card">
+            <div style="display: flex; align-items: center; gap: 0.35rem; color: #166534; font-weight: 800; font-size: 0.82rem;">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+              <span>Candidate Safe High-Ground (Relative Elevation)</span>
+            </div>
+            <div id="inspector-safezone-name" style="font-weight: 800; color: #15803d; font-size: 0.88rem; margin-top: 3px;">Bhatwari Ridge Crest Safe Area</div>
+            <div class="safe-zone-desc" id="inspector-safezone-desc" style="font-size: 0.76rem; color: #374151; margin-top: 3px;">
+              Elevation: 1,280m (+142m relative height)<br/>
+              Distance: 1.9 km (~25 mins walk) | Access: Mountain Ridge Trail
+            </div>
+          </div>
+
+          <!-- Official Government Shelter Card -->
+          <div class="official-shelter-card">
+            <div style="display: flex; align-items: center; gap: 0.35rem; color: #1e40af; font-weight: 800; font-size: 0.82rem;">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+              <span>Official Government Designated Shelter</span>
+            </div>
+            <div id="inspector-shelter-name" style="font-weight: 800; color: #1e3a8a; font-size: 0.88rem; margin-top: 3px;">Bhatwari Inter-College Relief Center</div>
+            <div id="inspector-shelter-desc" style="font-size: 0.76rem; color: #374151; margin-top: 3px;">
+              Capacity: 500 persons | Contact: SDM Bhatwari Control Room
+            </div>
+          </div>
+
+          <!-- Authorized Action Button -->
+          <button class="dispatch-action-btn authorized-only" id="inspector-dispatch-btn">
+            <svg class="icon-svg" viewBox="0 0 24 24"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/></svg>
+            <span>Issue Emergency Alert & Evacuate</span>
+          </button>
+        </aside>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         TAB 2: ANALYZE TELEMETRY PAGE
+         ========================================================================== -->
+    <section class="tab-page" id="tab-analyze">
+      <div class="analyze-header-bar">
+        <div>
+          <h2>National Hazard Situation Awareness</h2>
+          <p style="font-size: 0.82rem; color: #64748b;">
+            Live weather monitoring across India • Explicitly distinguishes ML Prediction Coverage (Uttarkashi Pilot) from Environmental Monitoring
+          </p>
+        </div>
+
+        <div class="search-filter-box">
+          <input type="text" class="search-input" id="search-input" placeholder="🔍 Search ANY city/district in India (e.g. Wayanad, Shimla)..." oninput="VajraAnalyze.handleSearch(this.value)">
+
+          <select class="filter-select" id="coverage-filter-select" onchange="VajraAnalyze.handleCoverageFilter(this.value)">
+            <option value="ALL">All Coverage Types</option>
+            <option value="ML_PILOT">ML Prediction (Uttarkashi Pilot)</option>
+            <option value="ENV_MONITORING">Environmental Weather Monitoring</option>
+          </select>
+
+          <select class="filter-select" id="tier-filter-select" onchange="VajraAnalyze.handleTierFilter(this.value)">
+            <option value="ALL">All Hazard Tiers</option>
+            <option value="Red">Red (Extreme Risk)</option>
+            <option value="Orange">Orange (High Warning)</option>
+            <option value="Yellow">Yellow (Moderate Watch)</option>
+            <option value="Green">Green (Low Normal)</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Nationwide Rainfall Extremes -->
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+        <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 9px; padding: 0.75rem 1rem;">
+          <div style="font-size: 0.72rem; color: #991b1b; text-transform: uppercase; font-weight: 800;">Highest Rainfall Region in Monitored Telemetry</div>
+          <div id="nationwide-highest-rain" style="margin-top: 0.2rem;">Loading live telemetry...</div>
+        </div>
+        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 9px; padding: 0.75rem 1rem;">
+          <div style="font-size: 0.72rem; color: #166534; text-transform: uppercase; font-weight: 800;">Lowest Rainfall Region in Monitored Telemetry</div>
+          <div id="nationwide-lowest-rain" style="margin-top: 0.2rem;">Loading live telemetry...</div>
+        </div>
+      </div>
+
+      <!-- Telemetry Data Table -->
+      <div class="table-wrapper">
+        <table class="telemetry-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th data-sort="village" onclick="VajraAnalyze.setSort('village')">Region / District <span class="sort-icon">⇅</span></th>
+              <th>Data Coverage Scope</th>
+              <th data-sort="risk_tier" onclick="VajraAnalyze.setSort('risk_tier')">Risk Tier <span class="sort-icon">⇅</span></th>
+              <th data-sort="rainfall_24h_mm" onclick="VajraAnalyze.setSort('rainfall_24h_mm')">Rainfall 24h (mm) <span class="sort-icon">▼</span></th>
+              <th data-sort="soil_saturation_pct" onclick="VajraAnalyze.setSort('soil_saturation_pct')">Soil Moisture <span class="sort-icon">⇅</span></th>
+              <th data-sort="slope_angle_deg" onclick="VajraAnalyze.setSort('slope_angle_deg')">Slope Angle <span class="sort-icon">⇅</span></th>
+              <th data-sort="risk_score" onclick="VajraAnalyze.setSort('risk_score')">Risk Score <span class="sort-icon">⇅</span></th>
+              <th data-sort="risk_trend" onclick="VajraAnalyze.setSort('risk_trend')">Trend <span class="sort-icon">⇅</span></th>
+              <th>Exposed Population</th>
+            </tr>
+          </thead>
+          <tbody id="analyze-table-body">
+            <!-- Dynamic 10 Rows per Page -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination Bar -->
+      <div class="pagination-bar">
+        <div class="pagination-info" id="pagination-info">
+          Showing 1 to 10 of 10 regions
+        </div>
+        <div class="pagination-controls" id="pagination-controls">
+          <!-- Page buttons -->
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-grid">
+        <div class="chart-card">
+          <h4>Regional Rainfall vs Soil Moisture Comparison</h4>
+          <div style="height: 220px; position: relative;">
+            <canvas id="analyze-chart"></canvas>
+          </div>
+        </div>
+        <div class="chart-card">
+          <h4>Hazard Tier Distribution</h4>
+          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span style="color: var(--risk-red); font-weight: 700;">Red (Extreme Risk)</span>
+              <span id="tier-dist-red">0 Slope Units (0%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span style="color: var(--risk-orange); font-weight: 700;">Orange (High Risk)</span>
+              <span id="tier-dist-orange">0 Slope Units (0%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span style="color: var(--risk-yellow); font-weight: 700;">Yellow (Moderate Watch)</span>
+              <span id="tier-dist-yellow">0 Slope Units (0%)</span>
+            </div>
+            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
+              <span style="color: var(--risk-green); font-weight: 700;">Green (Low Normal)</span>
+              <span id="tier-dist-green">0 Slope Units (0%)</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================================================
+         TAB 3: ALERT MANAGEMENT & HISTORY LOGS
+         ========================================================================== -->
+    <section class="tab-page" id="tab-alerts">
+      <div class="analyze-header-bar">
+        <div>
+          <h2>Official Emergency Alert Operations & Audit History</h2>
+          <p style="font-size: 0.82rem; color: #64748b;">
+            Audit logs of all CAP cell broadcast transmissions, emergency dispatches, and hazard alert resolutions
+          </p>
+        </div>
+
+        <div style="display: flex; gap: 0.5rem;">
+          <button class="btn-secondary-action" onclick="VajraAlerts.setHistoryFilter('ALL')">All Logs</button>
+          <button class="btn-secondary-action" onclick="VajraAlerts.setHistoryFilter('Active')">Active Alerts</button>
+          <button class="btn-secondary-action" onclick="VajraAlerts.setHistoryFilter('Resolved')">Resolved</button>
+        </div>
+      </div>
+
+      <!-- Alert History Table -->
+      <div class="table-wrapper">
+        <table class="telemetry-table">
+          <thead>
+            <tr>
+              <th>Timestamp</th>
+              <th>Location / Sector</th>
+              <th>Hazard Type</th>
+              <th>Risk Level</th>
+              <th>Status</th>
+              <th>Action / Broadcast Issued</th>
+              <th>Logged By (Dept ID)</th>
+            </tr>
+          </thead>
+          <tbody id="alert-history-table-body">
+            <!-- Dynamic Alert History Rows -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ==========================================================================
+       MODALS & DIALOGS
+       ========================================================================== -->
+
+  <!-- Secured Department Login Modal -->
+  <div class="modal-overlay" id="login-modal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <h3 style="color: #1e3a8a; display: flex; align-items: center; gap: 0.4rem;">
+          <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          <span>SECURED AUTHORIZED LOGIN</span>
+        </h3>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('login-modal')">✖</button>
+      </div>
+
+      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.78rem; color: #1e40af;">
+        Encrypted TLS 1.3 Channel • Pre-authorized Department Credentials Loaded
+      </div>
+
+      <form onsubmit="VajraUI.handleLoginSubmit(event)">
+        <div class="form-group">
+          <label>Department ID</label>
+          <input type="text" class="form-control" id="login-dept-id" value="NDRF-HQ-01" required>
+        </div>
+
+        <div class="form-group">
+          <label>Password</label>
+          <input type="password" class="form-control" id="login-password" value="password123" required>
+        </div>
+
+        <button type="submit" class="btn-primary-block">LOGIN</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Official CAP Alert Transmission Modal -->
+  <div class="modal-overlay" id="dispatch-modal">
+    <div class="modal-card" style="width: 580px;">
+      <div class="modal-header">
+        <h3 style="color: var(--risk-red);" id="dispatch-modal-title">Confirm Emergency Broadcast Transmission</h3>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('dispatch-modal')">✖</button>
+      </div>
+
+      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
+        <div style="font-weight: 800; color: #991b1b; font-size: 0.9rem; margin-bottom: 0.4rem;">
+          Emergency Cell Broadcast Summary
+        </div>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.78rem; color: #374151;">
+          <div>Target Sector: <strong id="dispatch-modal-region">Bhatwari, Uttarkashi</strong></div>
+          <div>Risk Level: <strong id="dispatch-modal-risk" style="color: var(--risk-red);">94% [Extreme]</strong></div>
+          <div>Rainfall: <strong id="dispatch-modal-rain">24h: 142mm | 72h: 184mm</strong></div>
+          <div>Soil Moisture: <strong id="dispatch-modal-soil">94%</strong></div>
+          <div>Slope Angle: <strong id="dispatch-modal-slope">38°</strong></div>
+          <div>Hazard Trend: <strong id="dispatch-modal-trend">Increasing</strong></div>
+          <div>Exposed Population: <strong id="dispatch-modal-pop" style="color: #c2410c;">~420 citizens</strong></div>
+          <div>Timestamp: <strong id="dispatch-modal-timestamp">2026-09-27 01:25 IST</strong></div>
+        </div>
+      </div>
+
+      <!-- Transmission Protocol Notice -->
+      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.78rem; color: #475569; line-height: 1.45;">
+        <strong style="color: #0f172a;">How Cell Broadcast Alert Transmission Operates Legally & Technically:</strong><br/>
+        • <strong>ITU X.1303 CAP Protocol</strong>: VAJRA packages alerts into standard Common Alerting Protocol (CAP XML).<br/>
+        • <strong>C-DOT Cell Broadcast Entity (CBE)</strong>: Directly dispatches signed CAP alerts to NDMA's national <em>Sachet</em> engine.<br/>
+        • <strong>Carrier-Grade Overrides</strong>: Telecom Operators (Jio, Airtel, BSNL) push non-blockable broadcast tones to cell towers in the target geofence without requiring individual app installs.<br/>
+        • <strong>Satellite VHF Sirens</strong>: Functions over satellite radio links even when mobile cell towers collapse.
+      </div>
+
+      <div style="display: flex; gap: 0.75rem;">
+        <button class="btn-danger-action" style="flex: 1; justify-content: center;" onclick="VajraAlerts.confirmEmergencyBroadcast()">
+          Transmit CAP Emergency Broadcast
+        </button>
+        <button class="btn-secondary-action" onclick="VajraAlerts.openCapProtocolDetailsModal()">
+          View Protocol Details
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Government CAP Architecture Modal -->
+  <div class="modal-overlay" id="cap-protocol-modal">
+    <div class="modal-card" style="width: 580px;">
+      <div class="modal-header">
+        <h3 style="color: #1e3a8a;">Government Cell Broadcast & CAP Protocol Integration</h3>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('cap-protocol-modal')">✖</button>
+      </div>
+      <div style="font-size: 0.82rem; color: #334155; line-height: 1.5; display: flex; flex-direction: column; gap: 0.75rem;">
+        <p>
+          VAJRA functions as an accredited <strong>Alert Originator Node</strong> under India's <strong>National Disaster Management Authority (NDMA) Integrated Alert System (Sachet)</strong>.
+        </p>
+        <div style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; border-left: 3px solid #2563eb;">
+          <strong>1. Standard XML Schema (ITU-T X.1303 CAP v1.2)</strong><br/>
+          Alerts emitted by VAJRA include geofenced GeoJSON polygons, severity headers, hazard classification, and evacuation directions.
+        </div>
+        <div style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; border-left: 3px solid #2563eb;">
+          <strong>2. C-DOT Cell Broadcast Entity (CBE) Pipeline</strong><br/>
+          Dispatches warning signals directly to targeted cell towers in vulnerable sectors. Cell phones sound a high-pitch warning chime regardless of silent mode or mobile data state.
+        </div>
+        <div style="background: #f1f5f9; padding: 0.75rem; border-radius: 8px; border-left: 3px solid #2563eb;">
+          <strong>3. Offline Satellite VHF Gateway Sirens</strong><br/>
+          In mountainous areas where cell towers are destroyed during landslides, local radio sirens are triggered via satellite link.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notifications -->
+  <div class="toast-container" id="toast-container"></div>
+
+  <!-- Leaflet JS -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- App Scripts -->
+  <script src="js/config.js"></script>
+  <script src="js/data.js"></script>
+  <script src="js/clock.js"></script>
+  <script src="js/auth.js"></script>
+  <script src="js/map.js"></script>
+  <script src="js/alerts.js"></script>
+  <script src="js/analyze.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>
