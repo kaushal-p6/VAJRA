@@ -38,8 +38,6 @@ const VajraMap = {
     if (!mapElement) return;
 
     this.map = L.map("map", {
-      center: VAJRA_CONFIG.MAP_INIT.center,
-      zoom: VAJRA_CONFIG.MAP_INIT.zoom,
       minZoom: VAJRA_CONFIG.MAP_INIT.minZoom,
       maxZoom: VAJRA_CONFIG.MAP_INIT.maxZoom,
       zoomControl: false
@@ -55,6 +53,22 @@ const VajraMap = {
 
     // Add Default Basemap
     this.tileLayers.satellite.addTo(this.map);
+
+    // IMPROVEMENT: the map used to always open zoomed into Uttarkashi alone
+    // (MAP_INIT.center/zoom), which meant any critical (Red/Orange) zone
+    // outside that one district — e.g. the Wayanad, Kerala region, thousands
+    // of km away — was completely invisible on load with no indication it
+    // existed. Open on a view that fits every active region instead, so
+    // nothing critical is hidden by default; "Pilot View" below still jumps
+    // straight into the Uttarkashi detail view on demand.
+    const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
+    if (allCenters.length > 1) {
+      this.map.fitBounds(L.latLngBounds(allCenters), { padding: [60, 60], maxZoom: 7 });
+    } else if (allCenters.length === 1) {
+      this.map.setView(allCenters[0], 9);
+    } else {
+      this.map.setView(VAJRA_CONFIG.MAP_INIT.center, VAJRA_CONFIG.MAP_INIT.zoom);
+    }
 
     // Add Overlay Layer Groups to Map
     Object.values(this.overlayLayers).forEach(layerGroup => layerGroup.addTo(this.map));
@@ -73,6 +87,21 @@ const VajraMap = {
     document.querySelectorAll(".map-layer-btn[data-layer]").forEach(btn => {
       btn.classList.toggle("active", btn.dataset.layer === layerKey);
     });
+  },
+
+  focusAllAlerts() {
+    const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
+    if (!this.map || allCenters.length === 0) return;
+    if (allCenters.length === 1) {
+      this.map.flyTo(allCenters[0], 9, { duration: 1.2 });
+    } else {
+      this.map.flyToBounds(L.latLngBounds(allCenters), { padding: [60, 60], maxZoom: 7, duration: 1.2 });
+    }
+  },
+
+  focusPilotRegion() {
+    if (!this.map) return;
+    this.map.flyTo(VAJRA_CONFIG.MAP_INIT.center, VAJRA_CONFIG.MAP_INIT.zoom, { duration: 1.2 });
   },
 
   toggleLayersDrawer() {
@@ -113,12 +142,24 @@ const VajraMap = {
     VAJRA_DATA.REGIONS.forEach(region => {
       const isRed = region.risk_tier === "Red";
       const isOrange = region.risk_tier === "Orange";
+      const isYellow = region.risk_tier === "Yellow";
+      const tierClass = isRed ? "risk-zone-red" : isOrange ? "risk-zone-orange" : isYellow ? "risk-zone-yellow" : "risk-zone-green";
+      const baseWeight = isRed ? 3.5 : isOrange ? 3 : 2;
 
+      // IMPROVEMENT: added a per-tier CSS class (glow via drop-shadow),
+      // rounded line joins/caps so the zone reads as a deliberate hazard
+      // outline rather than a raw angular polygon, and a dashed stroke on
+      // Red zones to carry urgency through a second visual channel besides
+      // color alone (helps colorblind viewers too).
       const polygon = L.polygon(region.coordinates, {
-        color: isRed ? "#b91c1c" : isOrange ? "#c2410c" : region.risk_tier === "Yellow" ? "#d97706" : "#15803d",
-        fillColor: isRed ? "rgba(220, 38, 38, 0.75)" : isOrange ? "rgba(234, 88, 12, 0.65)" : region.risk_tier === "Yellow" ? "rgba(217, 119, 6, 0.45)" : "rgba(22, 163, 74, 0.3)",
+        className: tierClass,
+        color: isRed ? "#b91c1c" : isOrange ? "#c2410c" : isYellow ? "#d97706" : "#15803d",
+        fillColor: isRed ? "rgba(220, 38, 38, 0.75)" : isOrange ? "rgba(234, 88, 12, 0.65)" : isYellow ? "rgba(217, 119, 6, 0.45)" : "rgba(22, 163, 74, 0.3)",
         fillOpacity: isRed ? 0.75 : isOrange ? 0.65 : 0.4,
-        weight: isRed ? 4 : isOrange ? 3.5 : 2
+        weight: baseWeight,
+        lineJoin: "round",
+        lineCap: "round",
+        dashArray: isRed ? "6 4" : null
       });
 
       const rainVal = region.environmental_inputs ? region.environmental_inputs.rainfall_24h_mm : (region.rainfall_24h_mm || 0);
@@ -132,19 +173,45 @@ const VajraMap = {
         </div>
       `, { sticky: true, opacity: 0.95 });
 
+      // IMPROVEMENT: thicken the outline on hover so a zone gives immediate
+      // feedback that it's interactive, before the click even registers.
+      polygon.on("mouseover", () => polygon.setStyle({ weight: baseWeight + 2 }));
+      polygon.on("mouseout", () => polygon.setStyle({ weight: baseWeight }));
       polygon.on("click", () => this.selectRegion(region));
       this.overlayLayers.risk_polygons.addLayer(polygon);
       this.regionLayers.push({ layer: polygon, tier: region.risk_tier, region: region });
 
-      // Radar Beacons for Red/Orange
+      // Hazard Beacons for Red/Orange
       if (isRed || isOrange) {
+        // IMPROVEMENT: the old beacon was only an expanding, fading ring
+        // with no solid center — on busy satellite imagery it frequently
+        // read as a faint smudge rather than a marker, and carried no
+        // information of its own. Replace it with a beacon that has a
+        // solid, legible core showing the risk percentage, plus the
+        // pulsing ring around it for attention.
+        const pct = Math.round((region.risk_score || 0) * 100);
+        const tierWord = isRed ? "red" : "orange";
         const beaconIcon = L.divIcon({
-          className: isRed ? "aggressive-beacon-red" : "aggressive-beacon-orange",
-          iconSize: [24, 24]
+          className: "",
+          html: `
+            <div class="hazard-beacon hazard-beacon-${tierWord}">
+              <span class="hazard-beacon-wave wave-1"></span>
+              <span class="hazard-beacon-wave wave-2"></span>
+              <span class="hazard-beacon-wave wave-3"></span>
+              <span class="hazard-beacon-core">${pct}%</span>
+            </div>
+          `,
+          iconSize: [40, 40],
+          iconAnchor: [20, 20]
         });
 
-        const beaconMarker = L.marker(region.center, { icon: beaconIcon });
-        beaconMarker.bindTooltip(`HAZARD ZONE: ${region.village} (${region.risk_tier})`, { permanent: false });
+        // FIX: Leaflet auto-ranks markers by their vertical screen position
+        // (lower on screen = stacked higher), so when zoomed out and markers
+        // cluster together, a hospital/emergency pin sitting just below a
+        // beacon could render on top of it. A high zIndexOffset keeps
+        // hazard beacons above every other marker regardless of position.
+        const beaconMarker = L.marker(region.center, { icon: beaconIcon, zIndexOffset: 1000 });
+        beaconMarker.bindTooltip(`HAZARD ZONE: ${region.village} — ${pct}% (${region.risk_tier})`, { permanent: false });
         beaconMarker.on("click", () => this.selectRegion(region));
 
         this.beaconLayers.push(beaconMarker);
@@ -181,16 +248,25 @@ const VajraMap = {
     }
 
     // 3. Render Infrastructure Markers (Hospitals & Emergency Stations)
+    // IMPROVEMENT: flat 6px circle dots were easy to lose against busy
+    // satellite/terrain imagery and carried no icon of their own. Use
+    // pin-shaped markers with a simple glyph instead, which read clearly
+    // at a glance and match conventional map-marker iconography.
     if (VAJRA_DATA.INFRASTRUCTURE) {
       VAJRA_DATA.INFRASTRUCTURE.forEach(infra => {
         const isHosp = infra.type === "Hospital";
-        const infraMarker = L.circleMarker([infra.lat, infra.lon], {
-          radius: 6,
-          color: isHosp ? "#2563eb" : "#d97706",
-          fillColor: isHosp ? "#93c5fd" : "#fde047",
-          fillOpacity: 0.9,
-          weight: 2
+        const pinIcon = L.divIcon({
+          className: "",
+          html: `
+            <div class="map-pin ${isHosp ? 'map-pin-hospital' : 'map-pin-emergency'}">
+              <span class="map-pin-icon">${isHosp ? '+' : '!'}</span>
+            </div>
+          `,
+          iconSize: [26, 26],
+          iconAnchor: [13, 26]
         });
+
+        const infraMarker = L.marker([infra.lat, infra.lon], { icon: pinIcon });
 
         infraMarker.bindTooltip(`
           <div style="font-family: Inter, sans-serif; font-size: 0.8rem;">
@@ -205,11 +281,47 @@ const VajraMap = {
       });
     }
 
+    // 4. Render River Courses (previously a declared-but-empty layer group)
+    if (VAJRA_DATA.RIVERS) {
+      VAJRA_DATA.RIVERS.forEach(river => {
+        const riverLine = L.polyline(river.coordinates, {
+          className: "river-line",
+          color: "#38bdf8",
+          weight: 3,
+          opacity: 0.85,
+          dashArray: "1 8",
+          lineCap: "round"
+        });
+        riverLine.bindTooltip(`🏞 ${river.name}`, { sticky: true });
+        this.overlayLayers.rivers.addLayer(riverLine);
+      });
+    }
+
     // Default Region Selection
     const topRegion = VAJRA_DATA.REGIONS.reduce((max, r) => r.risk_score > max.risk_score ? r : max, VAJRA_DATA.REGIONS[0]);
     if (topRegion) {
       this.selectRegion(topRegion, false);
     }
+
+    this.updateLegendCounts();
+  },
+
+  // IMPROVEMENT: legend used to be static labels with no counts, so it told
+  // you what the colors meant but nothing about the actual current
+  // situation. Compute live counts per tier from the real dataset.
+  updateLegendCounts() {
+    const counts = { Red: 0, Orange: 0, Yellow: 0, Green: 0 };
+    VAJRA_DATA.REGIONS.forEach(r => {
+      if (counts[r.risk_tier] !== undefined) counts[r.risk_tier]++;
+    });
+    const setCount = (id, val) => {
+      const el = document.getElementById(id);
+      if (el) el.textContent = val;
+    };
+    setCount("legend-count-red", counts.Red);
+    setCount("legend-count-orange", counts.Orange);
+    setCount("legend-count-yellow", counts.Yellow);
+    setCount("legend-count-green", counts.Green);
   },
 
   handleZoomLevelChange() {
@@ -256,6 +368,9 @@ const VajraMap = {
     } else if (layerId === "layer_emergency_facilities") {
       if (isChecked) this.overlayLayers.emergency_facilities.addTo(this.map);
       else this.map.removeLayer(this.overlayLayers.emergency_facilities);
+    } else if (layerId === "layer_rivers") {
+      if (isChecked) this.overlayLayers.rivers.addTo(this.map);
+      else this.map.removeLayer(this.overlayLayers.rivers);
     }
   },
 

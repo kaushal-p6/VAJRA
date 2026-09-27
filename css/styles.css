@@ -436,8 +436,10 @@ h1, h2, h3, h4, h5, h6 {
   position: absolute;
   top: 12px;
   left: 12px;
+  max-width: calc(100% - 24px);
   z-index: 500;
   display: flex;
+  flex-wrap: wrap;
   gap: 0.35rem;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
@@ -481,6 +483,12 @@ h1, h2, h3, h4, h5, h6 {
   display: none;
   flex-direction: column;
   overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  /* On narrow viewports the overlay-controls bar wraps to two rows —
+     push the drawer down so it doesn't sit under the second row. */
+  .map-layers-drawer { top: 96px; }
 }
 
 .map-layers-drawer.show { display: flex; animation: slideDown 0.2s ease-out; }
@@ -562,6 +570,10 @@ h1, h2, h3, h4, h5, h6 {
 .legend-dot.orange { background: var(--risk-orange); }
 .legend-dot.yellow { background: var(--risk-yellow); }
 .legend-dot.green { background: var(--risk-green); }
+.legend-count {
+  background: #f1f5f9; color: #475569; border-radius: 999px;
+  padding: 0 0.4rem; font-size: 0.68rem; font-weight: 800; min-width: 16px; text-align: center;
+}
 
 /* Side Panel Inspector */
 .side-panel {
@@ -769,29 +781,82 @@ h1, h2, h3, h4, h5, h6 {
 }
 .btn-secondary-action:hover { background: #e2e8f0; }
 
-/* Radar Beacons */
-.aggressive-beacon-red { position: relative; }
-.aggressive-beacon-red::after {
-  content: ''; position: absolute; top: 50%; left: 50%; width: 64px; height: 64px;
-  margin-top: -32px; margin-left: -32px; border-radius: 50%;
-  background: rgba(220, 38, 38, 0.6); border: 3px solid #dc2626;
-  box-shadow: 0 0 25px rgba(220, 38, 38, 0.9);
-  animation: aggressive-radar 1.5s infinite cubic-bezier(0, 0.2, 0.8, 1); pointer-events: none;
+/* IMPROVEMENT: previous beacons were only a fading, expanding ring with no
+   solid center — on busy satellite/terrain imagery they frequently read as
+   a faint smudge and carried no information of their own. Replace with a
+   marker that has a legible core showing the risk percentage, with the
+   pulsing ring layered behind it purely for attention. */
+.hazard-beacon {
+  position: relative; width: 40px; height: 40px;
+  display: flex; align-items: center; justify-content: center;
 }
 
-.aggressive-beacon-orange { position: relative; }
-.aggressive-beacon-orange::after {
-  content: ''; position: absolute; top: 50%; left: 50%; width: 52px; height: 52px;
-  margin-top: -26px; margin-left: -26px; border-radius: 50%;
-  background: rgba(234, 88, 12, 0.5); border: 3px solid #ea580c;
-  box-shadow: 0 0 20px rgba(234, 88, 12, 0.8);
-  animation: aggressive-radar 2s infinite cubic-bezier(0, 0.2, 0.8, 1); pointer-events: none;
+.hazard-beacon-core {
+  position: relative; z-index: 2;
+  min-width: 38px; height: 38px; padding: 0 4px;
+  border-radius: 999px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.68rem; color: #fff;
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  letter-spacing: -0.2px;
 }
 
-@keyframes aggressive-radar {
-  0% { transform: scale(0.2); opacity: 1; }
-  100% { transform: scale(2.8); opacity: 0; }
+.hazard-beacon-red .hazard-beacon-core { background: #dc2626; }
+.hazard-beacon-orange .hazard-beacon-core { background: #ea580c; }
+
+.hazard-beacon-wave {
+  position: absolute; z-index: 1; top: 50%; left: 50%;
+  width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  border-radius: 50%; pointer-events: none;
 }
+
+/* IMPROVEMENT: replaced the single fading pulse with three rings that
+   expand outward one after another, like ripples spreading from a stone
+   dropped in water, instead of one flash repeating. */
+.hazard-beacon-wave {
+  border: 2.5px solid transparent;
+  animation: hazard-wave 2.4s infinite cubic-bezier(0, 0.55, 0.45, 1);
+}
+.hazard-beacon-wave.wave-2 { animation-delay: 0.8s; }
+.hazard-beacon-wave.wave-3 { animation-delay: 1.6s; }
+
+.hazard-beacon-red .hazard-beacon-wave { border-color: rgba(220, 38, 38, 0.9); }
+.hazard-beacon-orange .hazard-beacon-wave { border-color: rgba(234, 88, 12, 0.9); animation-duration: 2.8s; }
+
+@keyframes hazard-wave {
+  0% { transform: scale(0.65); opacity: 0.9; border-width: 3px; }
+  100% { transform: scale(3.4); opacity: 0; border-width: 0.5px; }
+}
+
+/* IMPROVEMENT: soft outer glow on the hazard-zone polygons themselves so
+   Extreme/High zones read as urgent even before a viewer notices the
+   beacon marker or opens the tooltip. */
+.risk-zone-red { filter: drop-shadow(0 0 7px rgba(220, 38, 38, 0.55)); }
+.risk-zone-orange { filter: drop-shadow(0 0 6px rgba(234, 88, 12, 0.45)); }
+.risk-zone-yellow { filter: drop-shadow(0 0 3px rgba(217, 119, 6, 0.3)); }
+.risk-zone-green { filter: none; }
+
+/* IMPROVEMENT: hospitals/emergency posts were flat 6px dots that got lost
+   against imagery and carried no icon. Pin markers with a simple glyph
+   read clearly at a glance. */
+.map-pin {
+  width: 24px; height: 24px; border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+  border: 2px solid #fff;
+}
+.map-pin-hospital { background: #2563eb; }
+.map-pin-emergency { background: #d97706; }
+.map-pin-icon {
+  transform: rotate(45deg);
+  color: #fff; font-size: 0.85rem; font-weight: 800; line-height: 1;
+}
+
+/* IMPROVEMENT: the "Rivers & Drainage" layer was declared in config but
+   never actually rendered anything — this gives it real content. */
+.river-line { pointer-events: stroke; }
 
 .safe-zone-blinking-pin {
   width: 24px; height: 24px; background: #16a34a; border: 3px solid #ffffff;

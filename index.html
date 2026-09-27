@@ -188,6 +188,17 @@
 
             <span style="border-right: 1px solid #cbd5e1; height: 18px; margin: auto 2px;"></span>
 
+            <button class="map-layer-btn" id="map-view-all-btn" onclick="VajraMap.focusAllAlerts()" title="Zoom out to see every active hazard zone across India">
+              <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+              <span>All Alerts</span>
+            </button>
+            <button class="map-layer-btn" id="map-view-pilot-btn" onclick="VajraMap.focusPilotRegion()" title="Zoom in to the Uttarkashi ML pilot region">
+              <svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 2 2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+              <span>Pilot View</span>
+            </button>
+
+            <span style="border-right: 1px solid #cbd5e1; height: 18px; margin: auto 2px;"></span>
+
             <button class="map-layer-btn active" data-layer="satellite" onclick="VajraMap.switchLayer('satellite')">
               <span>Satellite</span>
             </button>
@@ -267,6 +278,14 @@
               </div>
 
               <div>
+                <div class="layer-group-title">Geography</div>
+                <label class="layer-checkbox-item">
+                  <span>🏞 Rivers & Drainage (Bhagirathi / Yamuna)</span>
+                  <input type="checkbox" id="layer_rivers" checked onchange="VajraMap.toggleOverlayGroup('layer_rivers', this.checked)">
+                </label>
+              </div>
+
+              <div>
                 <div class="layer-group-title">Hazard History</div>
                 <label class="layer-checkbox-item">
                   <span>📜 Historical Landslides (GSI Catalog)</span>
@@ -300,10 +319,10 @@
           <div class="map-legend">
             <div class="legend-title">Risk Level Legend</div>
             <div class="legend-items">
-              <div class="legend-item"><span class="legend-dot red"></span> Extreme</div>
-              <div class="legend-item"><span class="legend-dot orange"></span> High</div>
-              <div class="legend-item"><span class="legend-dot yellow"></span> Moderate</div>
-              <div class="legend-item"><span class="legend-dot green"></span> Low</div>
+              <div class="legend-item"><span class="legend-dot red"></span> Extreme <span id="legend-count-red" class="legend-count">0</span></div>
+              <div class="legend-item"><span class="legend-dot orange"></span> High <span id="legend-count-orange" class="legend-count">0</span></div>
+              <div class="legend-item"><span class="legend-dot yellow"></span> Moderate <span id="legend-count-yellow" class="legend-count">0</span></div>
+              <div class="legend-item"><span class="legend-dot green"></span> Low <span id="legend-count-green" class="legend-count">0</span></div>
             </div>
           </div>
         </div>

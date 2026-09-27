@@ -562,6 +562,27 @@ const VAJRA_DATA = {
     }
   ],
 
+  // 2b. Approximate River Courses through the Pilot Region (Bhagirathi & Yamuna valleys)
+  RIVERS: [
+    {
+      id: "RIVER-BHAGIRATHI",
+      name: "Bhagirathi River",
+      coordinates: [
+        [31.030, 78.790], [31.010, 78.700], [30.998, 78.560],
+        [30.982, 78.451], [30.870, 78.445], [30.732, 78.442],
+        [30.600, 78.420]
+      ]
+    },
+    {
+      id: "RIVER-YAMUNA",
+      name: "Yamuna River",
+      coordinates: [
+        [30.900, 78.450], [30.850, 78.320], [30.810, 78.200],
+        [30.760, 78.150], [30.700, 78.090]
+      ]
+    }
+  ],
+
   // 3. Infrastructure Datasets (Hospitals, Emergency Stations, Schools)
   INFRASTRUCTURE: [
     {
