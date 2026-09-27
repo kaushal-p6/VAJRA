@@ -317,8 +317,8 @@
                   <input type="checkbox" id="layer_emergency_facilities" checked onchange="VajraMap.toggleOverlayGroup('layer_emergency_facilities', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🛣 Safe High-Ground Routes</span>
-                  <input type="checkbox" checked>
+                  <span>🛡️ Evacuation Routes & Safe Zones</span>
+                  <input type="checkbox" id="layer_routes" checked onchange="VajraMap.toggleOverlayGroup('layer_routes', this.checked)">
                 </label>
               </div>
             </div>
@@ -360,6 +360,48 @@
             <span class="quality-badge good" id="inspector-quality-badge">Data Quality: Good</span>
           </div>
 
+          <!-- Live Ground Telemetry & OpenWeatherMap Widget (Step 5) -->
+          <div class="live-weather-card" id="inspector-live-weather">
+            <div class="live-weather-header">
+              <div style="display: flex; align-items: center; gap: 6px;">
+                <span class="live-pulse-dot"></span>
+                <span style="font-size: 0.72rem; font-weight: 800; color: #0f172a; letter-spacing: 0.04em;">LIVE GROUND TELEMETRY (AWS)</span>
+              </div>
+              <span class="weather-station-badge" id="weather-station-name">OpenWeatherMap Live</span>
+            </div>
+            <div class="live-weather-body">
+              <div class="weather-temp-box">
+                <span class="weather-temp-icon" id="weather-icon">🌧️</span>
+                <div>
+                  <div class="weather-temp-val" id="weather-temp">6.3°C</div>
+                  <div class="weather-condition" id="weather-cond">Light Rain</div>
+                </div>
+              </div>
+              <div class="weather-metrics-grid">
+                <div class="weather-metric-item">
+                  <span class="wm-label">Humidity</span>
+                  <span class="wm-val" id="weather-humidity">89%</span>
+                </div>
+                <div class="weather-metric-item">
+                  <span class="wm-label">Wind</span>
+                  <span class="wm-val" id="weather-wind">6 km/h NW</span>
+                </div>
+                <div class="weather-metric-item">
+                  <span class="wm-label">1h Rain</span>
+                  <span class="wm-val" id="weather-rain-1h" style="color: #2563eb;">0.6 mm</span>
+                </div>
+                <div class="weather-metric-item">
+                  <span class="wm-label">Pressure</span>
+                  <span class="wm-val" id="weather-pressure">1017 hPa</span>
+                </div>
+              </div>
+            </div>
+            <div class="weather-footer">
+              <span id="weather-sync-status">Telemetry Stream: OpenWeather API (Station: Uttarkāshi)</span>
+              <span style="color: #16a34a; font-weight: 700;">● Active Stream</span>
+            </div>
+          </div>
+
           <!-- Model Input Conditions Grid -->
           <div>
             <div style="font-size: 0.7rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Model Input Conditions</div>
@@ -389,16 +431,19 @@
             <div class="metric-value" id="inspector-impact-time" style="color: var(--risk-red); font-size: 0.9rem;">Elevated risk expected during next 2-4 hours</div>
           </div>
 
-          <!-- Main Risk Drivers -->
-          <div>
-            <h4 style="font-size: 0.72rem; color: #64748b; text-transform: uppercase; font-weight: 800; margin-bottom: 0.35rem;">Main Risk Drivers (Model Inputs)</h4>
-            <ul class="factors-list" id="inspector-factors">
-              <li>
-                <strong style="color: #0f172a;">Torrential Rainfall (24h: 142mm)</strong> [High Contribution]<br/>
-                <span style="font-size: 0.72rem; color: #64748b;">Monsoon cloudburst accumulation in Bhagirathi catchment</span>
-              </li>
-            </ul>
+          <!-- Multi-Source Data Provenance Cards (SIH 2026 Theme Requirement - Step 5) -->
+          <div class="provenance-container">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
+              <h4 style="font-size: 0.72rem; color: #0f172a; text-transform: uppercase; font-weight: 800; display: flex; align-items: center; gap: 4px; margin: 0;">
+                <span>🛰️ MULTI-SOURCE DATA PROVENANCE</span>
+              </h4>
+              <span style="background: #eff6ff; color: #1e40af; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 800; border: 1px solid #bfdbfe;">4 FEEDS INTEGRATED</span>
+            </div>
+            <div class="provenance-grid" id="inspector-provenance-cards">
+              <!-- Dynamically populated 4 institutional provenance cards by map.js -->
+            </div>
           </div>
+
 
           <!-- Rainfall Intelligence Accumulation Graph & Forecast -->
           <div style="background: #ffffff; border: 1px solid #e2e8f0; border-radius: 8px; padding: 0.65rem;">

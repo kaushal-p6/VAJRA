@@ -868,16 +868,311 @@ h1, h2, h3, h4, h5, h6 {
    never actually rendered anything — this gives it real content. */
 .river-line { pointer-events: stroke; }
 
-.safe-zone-blinking-pin {
-  width: 24px; height: 24px; background: #16a34a; border: 3px solid #ffffff;
-  border-radius: 50%; box-shadow: 0 0 14px rgba(22, 163, 74, 0.9);
-  animation: safe-blink 1.2s infinite ease-in-out;
+
+/* ============================================================
+   STEP 3 — Safe Zone Shield, Evacuation Route & Distance Badge
+   ============================================================ */
+
+/* 1. Safe-zone shield marker (green, pulsing glow) */
+.safe-zone-shield {
+  width: 42px; height: 42px;
+  display: flex; align-items: center; justify-content: center;
+  filter: drop-shadow(0 0 8px rgba(22, 163, 74, 0.9));
+  animation: shield-pulse 2.4s infinite ease-in-out;
+  cursor: pointer;
+}
+.safe-zone-shield svg { width: 42px; height: 42px; }
+
+@keyframes shield-pulse {
+  0%, 100% { filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.8)); transform: scale(1); }
+  50%       { filter: drop-shadow(0 0 18px rgba(22, 163, 74, 1));  transform: scale(1.12); }
 }
 
-@keyframes safe-blink {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.35; transform: scale(1.3); }
+/* 2. Official government shelter pin (blue) */
+.gov-shelter-pin {
+  width: 36px; height: 36px;
+  display: flex; align-items: center; justify-content: center;
+  background: #1d4ed8; border: 3px solid #fff;
+  border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
+  box-shadow: 0 3px 8px rgba(29, 78, 216, 0.6);
+  animation: shelter-glow 3s infinite ease-in-out;
 }
+.gov-shelter-pin-inner {
+  transform: rotate(45deg);
+  font-size: 1rem; line-height: 1;
+}
+@keyframes shelter-glow {
+  0%, 100% { box-shadow: 0 3px 8px rgba(29, 78, 216, 0.5); }
+  50%       { box-shadow: 0 4px 18px rgba(29, 78, 216, 0.95); }
+}
+
+/* 3. Hazard-origin danger pin (red) */
+.danger-origin-pin {
+  width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: #dc2626; border: 3px solid #fff;
+  border-radius: 50%; box-shadow: 0 0 12px rgba(220, 38, 38, 0.8);
+  animation: danger-pulse 1.6s infinite ease-in-out;
+  font-size: 1rem; line-height: 1; color: #fff; font-weight: 800;
+}
+@keyframes danger-pulse {
+  0%, 100% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.7); transform: scale(1); }
+  50%       { box-shadow: 0 0 22px rgba(220, 38, 38, 1); transform: scale(1.15); }
+}
+
+/* 4. Mid-route distance & elevation badge */
+.route-badge {
+  background: rgba(15, 23, 42, 0.92);
+  color: #fff; border: 1.5px solid #16a34a;
+  border-radius: 8px; padding: 5px 10px;
+  font-family: Inter, sans-serif; font-size: 11px; font-weight: 700;
+  white-space: nowrap; backdrop-filter: blur(4px);
+  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
+  line-height: 1.5;
+}
+.route-badge .badge-dist { color: #4ade80; }
+.route-badge .badge-time { color: #93c5fd; }
+.route-badge .badge-elev { color: #fbbf24; }
+
+/* 5. Animated dashes on the evacuation polyline — the SVG dash-offset
+      trick is handled by Leaflet's className; we animate via the global
+      class assigned to the path element. */
+.evac-route-path {
+  stroke-dasharray: 12 8;
+  animation: dash-march 1.2s linear infinite;
+}
+@keyframes dash-march {
+  to { stroke-dashoffset: -20; }
+}
+
+/* 6. Tactical Permanent Badge for Safe Haven Shield */
+.safe-zone-tooltip {
+  background: #0f172a !important;
+  color: #f8fafc !important;
+  border: 1.5px solid #22c55e !important;
+  border-radius: 6px !important;
+  padding: 4px 9px !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 11px !important;
+  font-weight: 700 !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+  white-space: nowrap !important;
+}
+.safe-zone-tooltip::before {
+  border-top-color: #22c55e !important;
+}
+
+/* 7. MapLibre 3D Tactical Popup Styling */
+.maplibregl-popup-content {
+  border-radius: 8px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4) !important;
+  border: 1px solid #cbd5e1 !important;
+  padding: 10px !important;
+}
+.maplibregl-popup-close-button {
+  font-size: 16px !important;
+  padding: 4px 8px !important;
+  color: #64748b !important;
+}
+
+/* ============================================================
+   STEP 5 — Live Weather Telemetry & Multi-Source Provenance Cards
+   ============================================================ */
+
+/* Live Weather Card */
+.live-weather-card {
+  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+  border: 1px solid #cbd5e1;
+  border-radius: 9px;
+  padding: 0.65rem 0.75rem;
+  margin-bottom: 0.55rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.live-weather-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.45rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.live-pulse-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  display: inline-block;
+  animation: live-dot-pulse 1.8s infinite ease-in-out;
+}
+@keyframes live-dot-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.35; transform: scale(1.35); }
+}
+
+.weather-station-badge {
+  font-size: 0.64rem;
+  font-weight: 700;
+  background: #e0f2fe;
+  color: #0369a1;
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid #bae6fd;
+}
+
+.live-weather-body {
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.weather-temp-box {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.weather-temp-icon {
+  font-size: 1.85rem;
+  line-height: 1;
+}
+
+.weather-temp-val {
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  font-family: 'Outfit', sans-serif;
+}
+
+.weather-condition {
+  font-size: 0.72rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.weather-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.3rem 0.5rem;
+  background: #ffffff;
+  padding: 0.4rem 0.5rem;
+  border-radius: 6px;
+  border: 1px solid #e2e8f0;
+}
+
+.weather-metric-item {
+  display: flex;
+  flex-direction: column;
+}
+
+.wm-label {
+  font-size: 0.58rem;
+  color: #94a3b8;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.wm-val {
+  font-size: 0.76rem;
+  font-weight: 800;
+  color: #1e293b;
+}
+
+.weather-footer {
+  margin-top: 0.4rem;
+  padding-top: 0.3rem;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.62rem;
+  color: #64748b;
+}
+
+/* Multi-Source Provenance Cards */
+.provenance-container {
+  margin-top: 0.65rem;
+  margin-bottom: 0.65rem;
+}
+
+.provenance-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.provenance-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 0.55rem;
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+.provenance-card:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 10px rgba(59, 130, 246, 0.12);
+  transform: translateY(-1px);
+}
+
+.provenance-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 0.25rem;
+}
+
+.prov-icon {
+  font-size: 1rem;
+}
+
+.prov-badge {
+  font-size: 0.58rem;
+  font-weight: 800;
+  padding: 1px 5px;
+  border-radius: 3px;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+.prov-badge-meteo { background: #dbeafe; color: #1e40af; border: 1px solid #bfdbfe; }
+.prov-badge-dem { background: #fef3c7; color: #92400e; border: 1px solid #fde68a; }
+.prov-badge-sar { background: #ffedd5; color: #9a3412; border: 1px solid #fed7aa; }
+.prov-badge-soil { background: #f3e8ff; color: #6b21a8; border: 1px solid #e9d5ff; }
+
+.prov-val {
+  font-size: 0.8rem;
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.2;
+  margin-bottom: 0.15rem;
+}
+
+.prov-trigger {
+  font-size: 0.65rem;
+  color: #475569;
+  line-height: 1.3;
+  margin-bottom: 0.3rem;
+}
+
+.prov-agency {
+  font-size: 0.62rem;
+  color: #64748b;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 0.25rem;
+}
+
+
 
 /* Analyze Page */
 .analyze-header-bar {
