@@ -78,16 +78,117 @@ const VajraMap = {
     this.renderOperationalOverlays();
   },
 
-  switchLayer(layerKey) {
-    if (!this.tileLayers[layerKey] || this.activeBasemap === layerKey) return;
-    this.map.removeLayer(this.tileLayers[this.activeBasemap]);
-    this.tileLayers[layerKey].addTo(this.map);
-    this.activeBasemap = layerKey;
 
-    document.querySelectorAll(".map-layer-btn[data-layer]").forEach(btn => {
-      btn.classList.toggle("active", btn.dataset.layer === layerKey);
+  // MapLibre GL instance for true 3D satellite
+  maplibreInstance: null,
+
+  switchLayer(layerKey) {
+    const MAPTILER_KEY = 'rgoSdjnjeWOJOJ0mO1RH';
+    const ml3dContainer = document.getElementById('maplibre-3d-container');
+
+    if (layerKey === 'maptiler_hybrid') {
+      if (this.activeBasemap === 'maptiler_hybrid') return;
+
+      // Hide Leaflet map, show MapLibre container
+      document.getElementById('map').style.opacity = '0';
+      document.getElementById('map').style.pointerEvents = 'none';
+      if (ml3dContainer) {
+        ml3dContainer.style.display = 'block';
+        ml3dContainer.style.opacity = '1';
+        ml3dContainer.style.pointerEvents = 'auto';
+      }
+
+      // Remove current Leaflet basemap
+      if (this.tileLayers[this.activeBasemap]) {
+        this.map.removeLayer(this.tileLayers[this.activeBasemap]);
+      }
+      this.activeBasemap = 'maptiler_hybrid';
+
+      // Initialize MapLibre GL if not yet created
+      if (!this.maplibreInstance && typeof maplibregl !== 'undefined' && ml3dContainer) {
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+
+        this.maplibreInstance = new maplibregl.Map({
+          container: 'maplibre-3d-container',
+          style: `https://api.maptiler.com/maps/hybrid/style.json?key=${MAPTILER_KEY}`,
+          center: [center.lng, center.lat],
+          zoom: zoom,
+          pitch: 65,
+          bearing: -20,
+          maxPitch: 85,
+          antialias: true
+        });
+
+        this.maplibreInstance.on('load', () => {
+          // Add 3D DEM terrain
+          if (!this.maplibreInstance.getSource('maptiler-terrain')) {
+            this.maplibreInstance.addSource('maptiler-terrain', {
+              type: 'raster-dem',
+              tiles: [`https://api.maptiler.com/tiles/terrain-rgb-v2/{z}/{x}/{y}.webp?key=${MAPTILER_KEY}`],
+              tileSize: 512,
+              maxzoom: 14,
+              encoding: 'mapbox'
+            });
+          }
+          this.maplibreInstance.setTerrain({ source: 'maptiler-terrain', exaggeration: 1.8 });
+
+          // Atmospheric sky
+          this.maplibreInstance.setSky({
+            'sky-color': '#38bdf8',
+            'sky-horizon-blend': 0.5,
+            'horizon-color': '#bae6fd',
+            'horizon-fog-blend': 0.5,
+            'fog-color': '#e0f2fe',
+            'fog-ground-blend': 0.3
+          });
+
+          // Add navigation controls
+          this.maplibreInstance.addControl(new maplibregl.NavigationControl(), 'bottom-right');
+        });
+
+      } else if (this.maplibreInstance) {
+        // Sync position from Leaflet
+        const center = this.map.getCenter();
+        const zoom = this.map.getZoom();
+        this.maplibreInstance.setCenter([center.lng, center.lat]);
+        this.maplibreInstance.setZoom(zoom);
+        this.maplibreInstance.resize();
+      }
+
+    } else {
+      // Switching back from 3D to a normal Leaflet basemap
+      if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
+        // Sync position back to Leaflet
+        const c = this.maplibreInstance.getCenter();
+        const z = this.maplibreInstance.getZoom();
+        this.map.setView([c.lat, c.lng], z, { animate: false });
+      }
+
+      if (!this.tileLayers[layerKey] || this.activeBasemap === layerKey) return;
+
+      // Hide MapLibre, show Leaflet
+      if (ml3dContainer) {
+        ml3dContainer.style.opacity = '0';
+        ml3dContainer.style.pointerEvents = 'none';
+        setTimeout(() => { ml3dContainer.style.display = 'none'; }, 300);
+      }
+      document.getElementById('map').style.opacity = '1';
+      document.getElementById('map').style.pointerEvents = 'auto';
+
+      // Remove previous Leaflet basemap (if it was a Leaflet layer)
+      if (this.tileLayers[this.activeBasemap]) {
+        this.map.removeLayer(this.tileLayers[this.activeBasemap]);
+      }
+      this.tileLayers[layerKey].addTo(this.map);
+      this.activeBasemap = layerKey;
+    }
+
+    document.querySelectorAll('.map-layer-btn[data-layer]').forEach(btn => {
+      btn.classList.toggle('active', btn.dataset.layer === layerKey);
     });
   },
+
 
   focusAllAlerts() {
     const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);

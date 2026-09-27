@@ -50,6 +50,11 @@ const VAJRA_CONFIG = {
       name: "Terrain",
       url: "https://server.arcgisonline.com/ArcGIS/rest/services/World_Shaded_Relief/MapServer/tile/{z}/{y}/{x}",
       attribution: "Esri, USGS, NOAA"
+    },
+    maptiler_hybrid: {
+      name: "MapTiler 3D Real Satellite",
+      url: "https://api.maptiler.com/maps/hybrid/style.json?key=rgoSdjnjeWOJOJ0mO1RH",
+      attribution: "&copy; <a href=\"https://www.maptiler.com/\" target=\"_blank\">MapTiler</a> &copy; <a href=\"https://www.openstreetmap.org/copyright\" target=\"_blank\">OpenStreetMap</a>"
     }
   },
 

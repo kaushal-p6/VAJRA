@@ -829,11 +829,21 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: scale(3.4); opacity: 0; border-width: 0.5px; }
 }
 
-/* IMPROVEMENT: soft outer glow on the hazard-zone polygons themselves so
-   Extreme/High zones read as urgent even before a viewer notices the
-   beacon marker or opens the tooltip. */
-.risk-zone-red { filter: drop-shadow(0 0 7px rgba(220, 38, 38, 0.55)); }
-.risk-zone-orange { filter: drop-shadow(0 0 6px rgba(234, 88, 12, 0.45)); }
+/* Tactical radar pulse animation on active hazard-zone polygons */
+@keyframes hazardPulseOrange {
+  0% { filter: drop-shadow(0 0 5px rgba(234, 88, 12, 0.45)); }
+  50% { filter: drop-shadow(0 0 12px rgba(234, 88, 12, 0.85)); }
+  100% { filter: drop-shadow(0 0 5px rgba(234, 88, 12, 0.45)); }
+}
+
+@keyframes hazardPulseRed {
+  0% { filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.55)); }
+  50% { filter: drop-shadow(0 0 14px rgba(220, 38, 38, 0.95)); }
+  100% { filter: drop-shadow(0 0 6px rgba(220, 38, 38, 0.55)); }
+}
+
+.risk-zone-red { animation: hazardPulseRed 2.2s infinite ease-in-out; }
+.risk-zone-orange { animation: hazardPulseOrange 2.8s infinite ease-in-out; }
 .risk-zone-yellow { filter: drop-shadow(0 0 3px rgba(217, 119, 6, 0.3)); }
 .risk-zone-green { filter: none; }
 

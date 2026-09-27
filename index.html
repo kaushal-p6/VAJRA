@@ -19,6 +19,10 @@
 
   <!-- Chart.js CDN -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <!-- MapLibre GL JS — True 3D Satellite Map -->
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+  <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
 </head>
 <body>
 
@@ -177,6 +181,8 @@
       <div class="dashboard-grid">
         <div class="map-container-box">
           <div id="map"></div>
+          <!-- MapLibre GL True 3D Satellite Map Container -->
+          <div id="maplibre-3d-container" style="position:absolute;top:0;left:0;width:100%;height:100%;display:none;opacity:0;transition:opacity 0.3s ease;z-index:5;"></div>
 
           <!-- Floating Map Controls & Operational Layers Toggle -->
           <div class="map-overlay-controls">
@@ -210,6 +216,9 @@
             </button>
             <button class="map-layer-btn" data-layer="terrain" onclick="VajraMap.switchLayer('terrain')">
               <span>Terrain</span>
+            </button>
+            <button class="map-layer-btn" data-layer="maptiler_hybrid" onclick="VajraMap.switchLayer('maptiler_hybrid')" title="True 3D Satellite – MapLibre GL + DEM Terrain (65° pitch, atmospheric sky)">
+              <span>🛰️ 3D Satellite</span>
             </button>
 
             <!-- Fullscreen Map Option -->
