@@ -78,8 +78,7 @@ const VajraUI = {
     }
 
     if (tabName === "analyze") {
-      VajraAnalyze.renderTable();
-      VajraAnalyze.renderChart();
+      VajraAnalyze.render();
     }
 
     if (tabName === "alerts") {
@@ -137,8 +136,7 @@ const VajraUI = {
     this.updateKPICards();
 
     if (this.activeTab === "analyze") {
-      VajraAnalyze.renderTable();
-      VajraAnalyze.renderChart();
+      VajraAnalyze.render();
     }
 
     VajraAlerts.playAudioAlert();

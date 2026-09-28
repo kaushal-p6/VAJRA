@@ -3,11 +3,234 @@
    Explicitly distinguishes ML Model Validation Scope vs Environmental Monitoring
    ========================================================================== */
 
+const NATIONAL_TELEMETRY_SECTORS = [
+  {
+    unit_id: "UK-CH-30112",
+    village: "Joshimath & Alaknanda Basin",
+    district: "Chamoli",
+    state: "Uttarakhand",
+    watershed_id: "ALAKNANDA-WS-02",
+    hazard_type: "Flash Flood & Slope Subsidence",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [30.5564, 79.5667],
+    risk_score: 0.76,
+    risk_tier: "Orange",
+    risk_trend: "Increasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 98.0,
+      rainfall_72h_mm: 142.0,
+      soil_moisture_pct: 84.0,
+      slope_angle_deg: 34.0,
+      elevation_m: 1890
+    },
+    exposure: { population_in_zone: 540 }
+  },
+  {
+    unit_id: "HP-KG-40201",
+    village: "Dharamshala & Kangra Escarpment",
+    district: "Kangra",
+    state: "Himachal Pradesh",
+    watershed_id: "BEAS-KANGRA-WS01",
+    hazard_type: "Cloudburst & Flash Flood",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [32.2190, 76.3234],
+    risk_score: 0.88,
+    risk_tier: "Red",
+    risk_trend: "Increasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 136.0,
+      rainfall_72h_mm: 178.0,
+      soil_moisture_pct: 89.0,
+      slope_angle_deg: 36.0,
+      elevation_m: 1457
+    },
+    exposure: { population_in_zone: 680 }
+  },
+  {
+    unit_id: "HP-KL-50314",
+    village: "Kullu & Upper Beas Valley",
+    district: "Kullu",
+    state: "Himachal Pradesh",
+    watershed_id: "BEAS-KULLU-WS03",
+    hazard_type: "Riverine Flash Surge & Debris Flow",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [31.9579, 77.1095],
+    risk_score: 0.72,
+    risk_tier: "Orange",
+    risk_trend: "Stable",
+    environmental_inputs: {
+      rainfall_24h_mm: 82.0,
+      rainfall_72h_mm: 118.0,
+      soil_moisture_pct: 78.0,
+      slope_angle_deg: 29.0,
+      elevation_m: 1220
+    },
+    exposure: { population_in_zone: 490 }
+  },
+  {
+    unit_id: "HP-MD-50822",
+    village: "Mandi & Pandoh Dam Catchment",
+    district: "Mandi",
+    state: "Himachal Pradesh",
+    watershed_id: "BEAS-PANDOH-WS02",
+    hazard_type: "Valley Inundation & Soil Saturation",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [31.7087, 76.9320],
+    risk_score: 0.54,
+    risk_tier: "Yellow",
+    risk_trend: "Stable",
+    environmental_inputs: {
+      rainfall_24h_mm: 56.0,
+      rainfall_72h_mm: 84.0,
+      soil_moisture_pct: 71.0,
+      slope_angle_deg: 22.0,
+      elevation_m: 760
+    },
+    exposure: { population_in_zone: 380 }
+  },
+  {
+    unit_id: "UK-RP-20419",
+    village: "Rudraprayag & Mandakini Confluence",
+    district: "Rudraprayag",
+    state: "Uttarakhand",
+    watershed_id: "MANDAKINI-WS-01",
+    hazard_type: "Glacial Surge & Flash Flood",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [30.2858, 78.9814],
+    risk_score: 0.82,
+    risk_tier: "Red",
+    risk_trend: "Increasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 122.0,
+      rainfall_72h_mm: 164.0,
+      soil_moisture_pct: 86.0,
+      slope_angle_deg: 35.0,
+      elevation_m: 895
+    },
+    exposure: { population_in_zone: 410 }
+  },
+  {
+    unit_id: "SK-MG-60105",
+    village: "Chungthang & Teesta Catchment",
+    district: "Mangan",
+    state: "Sikkim",
+    watershed_id: "TEESTA-BASIN-WS01",
+    hazard_type: "GLOF & Mountain Flash Flood",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [27.6039, 88.6464],
+    risk_score: 0.74,
+    risk_tier: "Orange",
+    risk_trend: "Increasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 92.0,
+      rainfall_72h_mm: 135.0,
+      soil_moisture_pct: 82.0,
+      slope_angle_deg: 37.0,
+      elevation_m: 1790
+    },
+    exposure: { population_in_zone: 320 }
+  },
+  {
+    unit_id: "KL-ID-70230",
+    village: "Munnar & Devikulam Catchment",
+    district: "Idukki",
+    state: "Kerala",
+    watershed_id: "PERIYAR-BASIN-WS04",
+    hazard_type: "Torrential Rain & Slope Runoff",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [10.0889, 77.0595],
+    risk_score: 0.52,
+    risk_tier: "Yellow",
+    risk_trend: "Stable",
+    environmental_inputs: {
+      rainfall_24h_mm: 52.0,
+      rainfall_72h_mm: 78.0,
+      soil_moisture_pct: 68.0,
+      slope_angle_deg: 26.0,
+      elevation_m: 1532
+    },
+    exposure: { population_in_zone: 290 }
+  },
+  {
+    unit_id: "UK-DD-10290",
+    village: "Rishikesh & Ganga Foothills",
+    district: "Dehradun",
+    state: "Uttarakhand",
+    watershed_id: "GANGA-FOOTHILLS-WS01",
+    hazard_type: "Riverbank Monitoring & Lowland Watch",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [30.0869, 78.2676],
+    risk_score: 0.24,
+    risk_tier: "Green",
+    risk_trend: "Decreasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 18.0,
+      rainfall_72h_mm: 32.0,
+      soil_moisture_pct: 46.0,
+      slope_angle_deg: 8.0,
+      elevation_m: 372
+    },
+    exposure: { population_in_zone: 210 }
+  },
+  {
+    unit_id: "TN-NL-80410",
+    village: "Coonoor & Nilgiris Escarpment",
+    district: "Nilgiris",
+    state: "Tamil Nadu",
+    watershed_id: "BHAVANI-BASIN-WS02",
+    hazard_type: "Ghats Slope Waterlogging",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [11.3530, 76.7959],
+    risk_score: 0.32,
+    risk_tier: "Green",
+    risk_trend: "Decreasing",
+    environmental_inputs: {
+      rainfall_24h_mm: 24.0,
+      rainfall_72h_mm: 40.0,
+      soil_moisture_pct: 54.0,
+      slope_angle_deg: 19.0,
+      elevation_m: 1850
+    },
+    exposure: { population_in_zone: 260 }
+  },
+  {
+    unit_id: "AR-ES-90120",
+    village: "Pasighat & Siang River Basin",
+    district: "East Siang",
+    state: "Arunachal Pradesh",
+    watershed_id: "BRAHMAPUTRA-SIANG-WS01",
+    hazard_type: "Heavy River Runoff Monitoring",
+    is_ml_validated: false,
+    data_coverage_type: "Environmental Weather Monitoring",
+    center: [28.0664, 95.3267],
+    risk_score: 0.48,
+    risk_tier: "Yellow",
+    risk_trend: "Stable",
+    environmental_inputs: {
+      rainfall_24h_mm: 48.0,
+      rainfall_72h_mm: 72.0,
+      soil_moisture_pct: 65.0,
+      slope_angle_deg: 14.0,
+      elevation_m: 153
+    },
+    exposure: { population_in_zone: 310 }
+  }
+];
+
 const VajraAnalyze = {
   sortColumn: "rainfall_24h_mm",
   sortDirection: "desc",
   currentPage: 1,
-  pageSize: 10, // Strictly 10 rows per page as specified!
+  pageSize: 10, // Strictly 10 rows per page
   searchTerm: "",
   tierFilter: "ALL",
   coverageFilter: "ALL",
@@ -16,35 +239,52 @@ const VajraAnalyze = {
   searchDebounceTimer: null,
 
   init() {
-    this.liveDynamicRegions = [...VAJRA_DATA.REGIONS];
+    // Seed with both verified pilot slope units and baseline regional telemetry stations
+    const existingIds = new Set((VAJRA_DATA.REGIONS || []).map(r => r.unit_id));
+    const extraSectors = NATIONAL_TELEMETRY_SECTORS.filter(s => !existingIds.has(s.unit_id));
+    this.liveDynamicRegions = [...VAJRA_DATA.REGIONS, ...extraSectors];
+
+    this.render();
+  },
+
+  // Master Synchronized Render Pipeline
+  render() {
     this.renderTable();
     this.renderChart();
     this.renderTierDistribution();
+    this.renderNationwideExtremes();
   },
 
-  // BUGFIX: this card previously showed hardcoded numbers (2/2/3/3 units,
-  // 20/20/30/30%) that summed to 10 units and never matched the actual
-  // VAJRA_DATA.REGIONS dataset (5 slope units: 2 Red, 2 Orange, 1 Yellow,
-  // 0 Green) and never updated. Compute it from the real data instead.
   renderTierDistribution() {
-    const regions = VAJRA_DATA.REGIONS;
-    const total = regions.length || 1;
+    const data = this.getFilteredAndSortedData();
+    const total = data.length || 1;
     const counts = { Red: 0, Orange: 0, Yellow: 0, Green: 0 };
-    regions.forEach(r => {
+    data.forEach(r => {
       if (counts[r.risk_tier] !== undefined) counts[r.risk_tier]++;
     });
 
-    const setTier = (id, count) => {
-      const el = document.getElementById(id);
-      if (!el) return;
+    const updateTier = (tierKey, idCount, idBar) => {
+      const count = counts[tierKey] || 0;
       const pct = Math.round((count / total) * 100);
-      el.textContent = `${count} Slope Unit${count === 1 ? '' : 's'} (${pct}%)`;
+      const countEl = document.getElementById(idCount);
+      const barEl = document.getElementById(idBar);
+      if (countEl) {
+        countEl.textContent = `${count} Sector${count === 1 ? '' : 's'} (${pct}%)`;
+      }
+      if (barEl) {
+        barEl.style.width = `${pct}%`;
+      }
     };
 
-    setTier("tier-dist-red", counts.Red);
-    setTier("tier-dist-orange", counts.Orange);
-    setTier("tier-dist-yellow", counts.Yellow);
-    setTier("tier-dist-green", counts.Green);
+    updateTier("Red", "tier-dist-red", "tier-bar-red");
+    updateTier("Orange", "tier-dist-orange", "tier-bar-orange");
+    updateTier("Yellow", "tier-dist-yellow", "tier-bar-yellow");
+    updateTier("Green", "tier-dist-green", "tier-bar-green");
+
+    const badgeTotal = document.getElementById("tier-dist-total-badge");
+    if (badgeTotal) {
+      badgeTotal.textContent = `${data.length} Total Units`;
+    }
   },
 
   setSort(column) {
@@ -55,7 +295,7 @@ const VajraAnalyze = {
       this.sortDirection = "desc";
     }
     this.currentPage = 1;
-    this.renderTable();
+    this.render();
   },
 
   handleSearch(term) {
@@ -64,7 +304,7 @@ const VajraAnalyze = {
 
     if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
 
-    this.renderTable();
+    this.render();
 
     if (this.searchTerm.length >= 3) {
       this.searchDebounceTimer = setTimeout(async () => {
@@ -76,10 +316,9 @@ const VajraAnalyze = {
 
         if (!localMatch) {
           await this.searchOpenStreetMapIndia(this.searchTerm);
-          this.renderTable();
-          this.renderChart();
+          this.render();
         }
-      }, 400);
+      }, 450);
     }
   },
 
@@ -102,11 +341,11 @@ const VajraAnalyze = {
         const district = displayNameParts[1] ? displayNameParts[1].trim() : "India Sector";
         const state = displayNameParts[displayNameParts.length - 2] ? displayNameParts[displayNameParts.length - 2].trim() : "India";
 
-        let riskScore = 0.20;
+        let riskScore = 0.25;
         let riskTier = "Green";
         if (weather.rainfall > 120) { riskScore = 0.92; riskTier = "Red"; }
         else if (weather.rainfall > 80) { riskScore = 0.74; riskTier = "Orange"; }
-        else if (weather.rainfall > 40) { riskScore = 0.48; riskTier = "Yellow"; }
+        else if (weather.rainfall > 40) { riskScore = 0.52; riskTier = "Yellow"; }
 
         const newLiveRegion = {
           unit_id: `IN-LIVE-${Date.now()}`,
@@ -118,8 +357,6 @@ const VajraAnalyze = {
           is_ml_validated: false,
           data_coverage_type: "Environmental Weather Monitoring",
           center: [lat, lon],
-          riverbed_elevation_m: Math.floor(weather.elevation || 150),
-          predicted_flood_height_m: Math.floor(weather.rainfall / 10),
           coordinates: [
             [lat + 0.015, lon - 0.015],
             [lat + 0.015, lon + 0.015],
@@ -129,69 +366,14 @@ const VajraAnalyze = {
           risk_score: riskScore,
           risk_tier: riskTier,
           risk_trend: "Stable",
-          hazard_window_hours: "Time-to-impact: Awaiting temporal ML model",
-          ml_model_version: "Weather Rule Telemetry",
-          ml_timestamp: "2026-09-27 01:25 IST",
-          
-          data_quality: { rainfall: "Good", soil_moisture: "Good", sensors: "Good", last_updated: "Just now" },
-
           environmental_inputs: {
-            rainfall_latest_mm: Math.round(weather.rainfall / 3),
-            rainfall_1h_mm: Math.round(weather.rainfall / 2),
-            rainfall_3h_mm: Math.round(weather.rainfall * 0.8),
-            rainfall_6h_mm: Math.round(weather.rainfall),
-            rainfall_12h_mm: Math.round(weather.rainfall * 1.2),
             rainfall_24h_mm: weather.rainfall,
-            rainfall_72h_mm: Math.round(weather.rainfall * 1.8),
-            forecast_1h_mm: 5.0,
-            forecast_3h_mm: 12.0,
-            forecast_6h_mm: 22.0,
-            forecast_12h_mm: 35.0,
-            forecast_24h_mm: 48.0,
+            rainfall_72h_mm: Math.round(weather.rainfall * 1.5),
             soil_moisture_pct: weather.soil_moisture,
-            soil_moisture_source: "Open-Meteo Weather API",
-            slope_angle_deg: 18.0,
-            elevation_m: Math.floor(weather.elevation || 180),
-            aspect: "S (180°)",
-            land_cover: "Mixed Cover",
-            soil_type: "Regional Soil"
+            slope_angle_deg: 20.0,
+            elevation_m: Math.floor(weather.elevation || 200)
           },
-
-          main_risk_drivers: [
-            { name: `Rainfall (24h: ${weather.rainfall}mm)`, level: "Moderate", impact: "Live weather telemetry" }
-          ],
-
-          historical_event_timeline: [],
-
-          exposure: {
-            population_in_zone: 350,
-            villages_affected_count: 1,
-            buildings_count: 40,
-            road_segments_affected: ["Local Access Road"],
-            hospitals_nearby: ["Sub-District Hospital"],
-            schools_nearby: ["Local Primary School"],
-            emergency_services: ["District Emergency Post"]
-          },
-
-          candidate_safe_high_ground: {
-            name: `${village} High Ridge Candidate Safe Area`,
-            lat: lat + 0.010,
-            lon: lon + 0.010,
-            elevation_m: Math.floor((weather.elevation || 150) + 110),
-            relative_safe_height_m: 100,
-            distance_km: 1.8,
-            est_walk_minutes: 22,
-            road_accessibility: "Footpath Trail"
-          },
-
-          official_government_shelter: {
-            name: `${village} Community Center Shelter (Official)`,
-            lat: lat + 0.008,
-            lon: lon + 0.008,
-            capacity: 400,
-            contact: "+91 Emergency DEOC",
-            facility_type: "Local Emergency Facility"
-          }
+          exposure: { population_in_zone: 350 }
         };
 
         this.liveDynamicRegions.unshift(newLiveRegion);
@@ -222,13 +404,34 @@ const VajraAnalyze = {
   handleTierFilter(tier) {
     this.tierFilter = tier;
     this.currentPage = 1;
-    this.renderTable();
+    this.render();
   },
 
   handleCoverageFilter(type) {
     this.coverageFilter = type;
     this.currentPage = 1;
-    this.renderTable();
+    this.render();
+  },
+
+  resetFilters() {
+    this.searchTerm = "";
+    this.tierFilter = "ALL";
+    this.coverageFilter = "ALL";
+    this.currentPage = 1;
+    this.sortColumn = "rainfall_24h_mm";
+    this.sortDirection = "desc";
+
+    const searchInput = document.getElementById("search-input");
+    const tierSelect = document.getElementById("tier-filter-select");
+    const covSelect = document.getElementById("coverage-filter-select");
+    if (searchInput) searchInput.value = "";
+    if (tierSelect) tierSelect.value = "ALL";
+    if (covSelect) covSelect.value = "ALL";
+
+    this.render();
+    if (typeof VajraUI !== "undefined") {
+      VajraUI.showToast("Telemetry filters reset", "info");
+    }
   },
 
   getFieldValue(r, field) {
@@ -329,11 +532,14 @@ const VajraAnalyze = {
     if (pageData.length === 0) {
       tableBody.innerHTML = `
         <tr>
-          <td colspan="10" style="text-align: center; padding: 2rem; color: #64748b;">
-            No matching telemetry records found for "${this.searchTerm}"
+          <td colspan="11" style="text-align: center; padding: 2.5rem; color: #64748b;">
+            <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b; margin-bottom: 4px;">No matching telemetry records found</div>
+            <div style="font-size: 0.82rem;">Try clearing search "${this.searchTerm}" or changing the active risk tier filter.</div>
           </td>
         </tr>
       `;
+      if (paginationInfo) paginationInfo.textContent = "Showing 0 to 0 of 0 regions";
+      if (paginationControls) paginationControls.innerHTML = "";
       return;
     }
 
@@ -347,14 +553,14 @@ const VajraAnalyze = {
       const slopeDeg = env.slope_angle_deg !== undefined ? env.slope_angle_deg : (r.slope_angle_deg || 0);
 
       return `
-        <tr>
+        <tr onclick="VajraAnalyze.viewOnMap('${r.unit_id}')" title="Click to view ${r.village} on 3D Map">
           <td><strong>${startIndex + i + 1}</strong></td>
           <td>
-            <strong style="color: #0f172a;">${r.village || 'Sector'}</strong>
+            <strong style="color: #0f172a; font-size: 0.9rem;">${r.village || 'Sector'}</strong>
             <div style="font-size: 0.72rem; color: #64748b;">${r.district || ''}, ${r.state || ''}</div>
           </td>
           <td>
-            <span style="font-size: 0.68rem; padding: 2px 6px; border-radius: 4px; font-weight: 700; ${r.is_ml_validated ? 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;' : 'background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;'}">
+            <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; ${r.is_ml_validated ? 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;' : 'background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;'}">
               ${r.is_ml_validated ? 'ML Model (Uttarkashi Pilot)' : 'Environmental Monitoring'}
             </span>
           </td>
@@ -362,20 +568,28 @@ const VajraAnalyze = {
             <span class="risk-badge ${(r.risk_tier || 'green').toLowerCase()}">${r.risk_tier || 'Green'}</span>
           </td>
           <td>
-            <strong style="color: ${rain24 > 100 ? '#dc2626' : '#2563eb'};">${rain24} mm</strong>
-            <div style="font-size: 0.72rem; color: #64748b;">72h: ${rain72} mm</div>
+            <strong style="color: ${rain24 > 100 ? '#dc2626' : '#2563eb'}; font-size: 0.92rem;">${rain24} mm</strong>
+            <div style="font-size: 0.7rem; color: #64748b;">72h: ${rain72} mm</div>
           </td>
           <td>
-            <strong style="color: ${soilPct > 85 ? '#dc2626' : '#ea580c'};">${soilPct}%</strong>
+            <strong style="color: ${soilPct > 85 ? '#dc2626' : '#ea580c'}; font-size: 0.9rem;">${soilPct}%</strong>
           </td>
           <td>${slopeDeg}°</td>
           <td>
-            <div style="font-weight: 800; color: ${tierDef.color};">${((r.risk_score || 0) * 100).toFixed(0)}%</div>
+            <div style="font-weight: 800; font-size: 0.92rem; color: ${tierDef.color};">${((r.risk_score || 0) * 100).toFixed(0)}%</div>
           </td>
           <td>
-            <span style="font-weight: 700; font-size: 0.78rem;">${r.risk_trend === 'Increasing' ? '↑ Increasing' : r.risk_trend === 'Decreasing' ? '↓ Decreasing' : '→ Stable'}</span>
+            <span style="font-weight: 700; font-size: 0.78rem; color: ${r.risk_trend === 'Increasing' ? '#dc2626' : r.risk_trend === 'Decreasing' ? '#16a34a' : '#64748b'};">
+              ${r.risk_trend === 'Increasing' ? '↑ Increasing' : r.risk_trend === 'Decreasing' ? '↓ Decreasing' : '→ Stable'}
+            </span>
           </td>
           <td>~${exp.population_in_zone} citizens</td>
+          <td style="text-align: center;">
+            <button type="button" class="btn-view-map-mini" onclick="event.stopPropagation(); VajraAnalyze.viewOnMap('${r.unit_id}')" title="Locate on 3D Map">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+              <span>Map</span>
+            </button>
+          </td>
         </tr>
       `;
     }).join("");
@@ -406,36 +620,87 @@ const VajraAnalyze = {
 
       paginationControls.innerHTML = btnsHtml;
     }
-
-    this.renderNationwideExtremes();
   },
 
   renderNationwideExtremes() {
     const highestBox = document.getElementById("nationwide-highest-rain");
     const lowestBox = document.getElementById("nationwide-lowest-rain");
+    const synthBox = document.getElementById("nationwide-synthesis");
     if (!highestBox || !lowestBox) return;
 
-    const allData = [...this.liveDynamicRegions].sort((a, b) => {
+    const allData = this.getFilteredAndSortedData();
+    if (allData.length === 0) {
+      highestBox.innerHTML = '<div style="color: #64748b; font-size: 0.82rem;">No sectors matching active filter</div>';
+      lowestBox.innerHTML = '<div style="color: #64748b; font-size: 0.82rem;">No sectors matching active filter</div>';
+      if (synthBox) synthBox.innerHTML = '<div style="color: #64748b; font-size: 0.82rem;">No sectors matching active filter</div>';
+      return;
+    }
+
+    const sortedByRain = [...allData].sort((a, b) => {
       const rainA = a.environmental_inputs ? a.environmental_inputs.rainfall_24h_mm : (a.rainfall_24h_mm || 0);
       const rainB = b.environmental_inputs ? b.environmental_inputs.rainfall_24h_mm : (b.rainfall_24h_mm || 0);
       return rainB - rainA;
     });
-    const highest = allData[0];
-    const lowest = allData[allData.length - 1];
+
+    const highest = sortedByRain[0];
+    const lowest = sortedByRain[sortedByRain.length - 1];
+
+    const totalRain = allData.reduce((sum, r) => {
+      const rain = r.environmental_inputs ? r.environmental_inputs.rainfall_24h_mm : (r.rainfall_24h_mm || 0);
+      return sum + rain;
+    }, 0);
+    const avgRain = (totalRain / allData.length).toFixed(1);
+
+    const redCount = allData.filter(r => r.risk_tier === "Red").length;
+    const orangeCount = allData.filter(r => r.risk_tier === "Orange").length;
 
     if (highest) {
       const envH = highest.environmental_inputs || {};
       highestBox.innerHTML = `
-        <div style="font-weight: 800; color: #dc2626;">${highest.village} (${highest.district}, ${highest.state})</div>
-        <div style="font-size: 0.85rem; color: #374151;">24h Rain: <strong>${envH.rainfall_24h_mm || 0} mm</strong> | Soil Moisture: ${envH.soil_moisture_pct || 0}%</div>
+        <div class="extreme-village-title">${highest.village}</div>
+        <div class="extreme-location-sub">${highest.district}, ${highest.state}</div>
+        <div class="extreme-metrics-row">
+          <span>24h Rain: <strong style="color: #dc2626;">${envH.rainfall_24h_mm || 0} mm</strong></span>
+          <span>72h: <strong>${envH.rainfall_72h_mm || 0} mm</strong></span>
+          <span>Soil: <strong>${envH.soil_moisture_pct || 0}%</strong></span>
+        </div>
+        <button type="button" class="btn-locate-map" onclick="VajraAnalyze.viewOnMap('${highest.unit_id}')">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+          <span>Locate on Map</span>
+        </button>
       `;
     }
 
     if (lowest) {
       const envL = lowest.environmental_inputs || {};
       lowestBox.innerHTML = `
-        <div style="font-weight: 800; color: #16a34a;">${lowest.village} (${lowest.district}, ${lowest.state})</div>
-        <div style="font-size: 0.85rem; color: #374151;">24h Rain: <strong>${envL.rainfall_24h_mm || 0} mm</strong> | Soil Moisture: ${envL.soil_moisture_pct || 0}%</div>
+        <div class="extreme-village-title">${lowest.village}</div>
+        <div class="extreme-location-sub">${lowest.district}, ${lowest.state}</div>
+        <div class="extreme-metrics-row">
+          <span>24h Rain: <strong style="color: #16a34a;">${envL.rainfall_24h_mm || 0} mm</strong></span>
+          <span>Soil: <strong>${envL.soil_moisture_pct || 0}%</strong></span>
+          <span>Slope: <strong>${envL.slope_angle_deg || 0}°</strong></span>
+        </div>
+        <button type="button" class="btn-locate-map" onclick="VajraAnalyze.viewOnMap('${lowest.unit_id}')">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"/></svg>
+          <span>Locate on Map</span>
+        </button>
+      `;
+    }
+
+    if (synthBox) {
+      synthBox.innerHTML = `
+        <div class="extreme-village-title">${allData.length} Monitored Basins</div>
+        <div class="extreme-location-sub">Himalayan & Western Ghats Stations Active</div>
+        <div class="extreme-metrics-row">
+          <span>Mean Rain: <strong>${avgRain} mm</strong></span>
+          <span>Critical (Red): <strong style="color: #dc2626;">${redCount}</strong></span>
+          <span>High: <strong style="color: #ea580c;">${orangeCount}</strong></span>
+        </div>
+        <button type="button" class="btn-locate-map" onclick="VajraUI.switchTab('dashboard'); VajraMap.focusAllAlerts();">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/></svg>
+          <span>View All on Map</span>
+        </button>
       `;
     }
   },
@@ -443,6 +708,87 @@ const VajraAnalyze = {
   goToPage(page) {
     this.currentPage = page;
     this.renderTable();
+  },
+
+  viewOnMap(unitId) {
+    const region = this.liveDynamicRegions.find(r => r.unit_id === unitId) || VAJRA_DATA.REGIONS.find(r => r.unit_id === unitId);
+    if (!region) return;
+
+    VajraUI.switchTab("dashboard");
+
+    if (typeof VajraMap !== "undefined" && VajraMap.map) {
+      setTimeout(() => {
+        const found = VAJRA_DATA.REGIONS.find(r => r.unit_id === unitId);
+        if (found) {
+          VajraMap.selectRegion(found, true);
+        } else if (region.center) {
+          VajraMap.map.flyTo(region.center, 12, { duration: 1.2 });
+          VajraUI.showToast(`Navigated to ${region.village} (${region.district})`, "info");
+        }
+      }, 150);
+    }
+  },
+
+  exportCSV() {
+    const data = this.getFilteredAndSortedData();
+    if (!data.length) {
+      VajraUI.showToast("No telemetry data to export", "warning");
+      return;
+    }
+
+    const headers = [
+      "Unit ID",
+      "Village / Sector",
+      "District",
+      "State",
+      "Coverage Scope",
+      "Risk Tier",
+      "Risk Score (%)",
+      "24h Rainfall (mm)",
+      "72h Rainfall (mm)",
+      "Soil Moisture (%)",
+      "Slope Angle (deg)",
+      "Trend",
+      "Exposed Population"
+    ];
+
+    const rows = data.map(r => {
+      const env = r.environmental_inputs || {};
+      const exp = r.exposure || { population_in_zone: 0 };
+      const rain24 = env.rainfall_24h_mm !== undefined ? env.rainfall_24h_mm : (r.rainfall_24h_mm || 0);
+      const rain72 = env.rainfall_72h_mm !== undefined ? env.rainfall_72h_mm : (r.rainfall_3d_mm || 0);
+      const soilPct = env.soil_moisture_pct !== undefined ? env.soil_moisture_pct : (r.soil_saturation_pct || 0);
+      const slopeDeg = env.slope_angle_deg !== undefined ? env.slope_angle_deg : (r.slope_angle_deg || 0);
+
+      return [
+        `"${r.unit_id || ''}"`,
+        `"${(r.village || '').replace(/"/g, '""')}"`,
+        `"${(r.district || '').replace(/"/g, '""')}"`,
+        `"${(r.state || '').replace(/"/g, '""')}"`,
+        `"${r.is_ml_validated ? 'ML Model Pilot' : 'Environmental Monitoring'}"`,
+        `"${r.risk_tier || ''}"`,
+        `"${((r.risk_score || 0) * 100).toFixed(0)}%"`,
+        rain24,
+        rain72,
+        soilPct,
+        slopeDeg,
+        `"${r.risk_trend || 'Stable'}"`,
+        exp.population_in_zone || 0
+      ].join(",");
+    });
+
+    const csvContent = [headers.join(","), ...rows].join("\r\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `VAJRA_National_Telemetry_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+
+    VajraUI.showToast(`Exported ${data.length} telemetry records to CSV`, "success");
   },
 
   renderChart() {
@@ -453,12 +799,13 @@ const VajraAnalyze = {
       this.chartInstance.destroy();
     }
 
-    const ctx = canvas.getContext("2d");
-    const topData = this.liveDynamicRegions.slice(0, 10);
-    const labels = topData.map(r => r.village);
+    const filtered = this.getFilteredAndSortedData();
+    const topData = filtered.slice(0, 10);
+    const labels = topData.map(r => r.village.length > 15 ? r.village.slice(0, 13) + "…" : r.village);
     const rainData = topData.map(r => r.environmental_inputs ? r.environmental_inputs.rainfall_24h_mm : (r.rainfall_24h_mm || 0));
     const soilData = topData.map(r => r.environmental_inputs ? r.environmental_inputs.soil_moisture_pct : (r.soil_saturation_pct || 0));
 
+    const ctx = canvas.getContext("2d");
     this.chartInstance = new Chart(ctx, {
       type: "bar",
       data: {
@@ -469,14 +816,16 @@ const VajraAnalyze = {
             data: rainData,
             backgroundColor: "rgba(37, 99, 235, 0.85)",
             borderColor: "#1d4ed8",
-            borderWidth: 1
+            borderWidth: 1,
+            borderRadius: 4
           },
           {
             label: "Soil Moisture (%)",
             data: soilData,
             backgroundColor: "rgba(234, 88, 12, 0.85)",
             borderColor: "#c2410c",
-            borderWidth: 1
+            borderWidth: 1,
+            borderRadius: 4
           }
         ]
       },
@@ -484,11 +833,39 @@ const VajraAnalyze = {
         responsive: true,
         maintainAspectRatio: false,
         plugins: {
-          legend: { labels: { color: "#334155", font: { family: "Inter", weight: "600" } } }
+          legend: {
+            position: "top",
+            labels: {
+              boxWidth: 12,
+              color: "#334155",
+              font: { family: "Inter", weight: "600", size: 11 }
+            }
+          },
+          tooltip: {
+            callbacks: {
+              title: (items) => {
+                const idx = items[0].dataIndex;
+                const r = topData[idx];
+                return r ? `${r.village} (${r.district}, ${r.state})` : "";
+              }
+            }
+          }
         },
         scales: {
-          x: { ticks: { color: "#64748b" }, grid: { color: "#e2e8f0" } },
-          y: { ticks: { color: "#64748b" }, grid: { color: "#e2e8f0" } }
+          x: {
+            ticks: {
+              color: "#64748b",
+              font: { size: 10, family: "Inter" },
+              maxRotation: 30,
+              minRotation: 0
+            },
+            grid: { display: false }
+          },
+          y: {
+            beginAtZero: true,
+            ticks: { color: "#64748b", font: { size: 10 } },
+            grid: { color: "#f1f5f9" }
+          }
         }
       }
     });

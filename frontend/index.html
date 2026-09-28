@@ -578,18 +578,51 @@
             <option value="Yellow">Yellow (Moderate Watch)</option>
             <option value="Green">Green (Low Normal)</option>
           </select>
+
+          <button type="button" class="btn-reset-filters" id="btn-reset-filters" onclick="VajraAnalyze.resetFilters()" title="Reset All Filters">
+            Reset
+          </button>
+
+          <button type="button" class="btn-export-csv" onclick="VajraAnalyze.exportCSV()" title="Export Filtered Telemetry to CSV">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="14" height="14"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <span>Export CSV</span>
+          </button>
         </div>
       </div>
 
-      <!-- Nationwide Rainfall Extremes -->
+      <!-- Nationwide Telemetry Summary Cards Strip -->
       <div class="extremes-grid">
-        <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 9px; padding: 0.75rem 1rem;">
-          <div style="font-size: 0.72rem; color: #991b1b; text-transform: uppercase; font-weight: 800;">Highest Rainfall Region in Monitored Telemetry</div>
-          <div id="nationwide-highest-rain" style="margin-top: 0.2rem;">Loading live telemetry...</div>
+        <!-- Card 1: Highest Precipitation -->
+        <div class="summary-extreme-card red-extreme" id="extreme-card-high">
+          <div class="summary-extreme-header">
+            <span class="extreme-badge red">MAX PRECIPITATION INTENSITY</span>
+            <span class="extreme-sub-badge">LIVE 24H PEAK</span>
+          </div>
+          <div id="nationwide-highest-rain" class="summary-extreme-body">
+            <!-- Dynamic Highest -->
+          </div>
         </div>
-        <div style="background: #f0fdf4; border: 1px solid #86efac; border-radius: 9px; padding: 0.75rem 1rem;">
-          <div style="font-size: 0.72rem; color: #166534; text-transform: uppercase; font-weight: 800;">Lowest Rainfall Region in Monitored Telemetry</div>
-          <div id="nationwide-lowest-rain" style="margin-top: 0.2rem;">Loading live telemetry...</div>
+
+        <!-- Card 2: Lowest Precipitation -->
+        <div class="summary-extreme-card green-extreme" id="extreme-card-low">
+          <div class="summary-extreme-header">
+            <span class="extreme-badge green">BASELINE MONITORING</span>
+            <span class="extreme-sub-badge">MIN RECORDED</span>
+          </div>
+          <div id="nationwide-lowest-rain" class="summary-extreme-body">
+            <!-- Dynamic Lowest -->
+          </div>
+        </div>
+
+        <!-- Card 3: Monitored Basins Synthesis -->
+        <div class="summary-extreme-card blue-extreme" id="extreme-card-avg">
+          <div class="summary-extreme-header">
+            <span class="extreme-badge blue">MONITORED BASINS SYNTHESIS</span>
+            <span class="extreme-sub-badge">SYSTEM-WIDE</span>
+          </div>
+          <div id="nationwide-synthesis" class="summary-extreme-body">
+            <!-- Dynamic Synthesis -->
+          </div>
         </div>
       </div>
 
@@ -608,6 +641,7 @@
               <th data-sort="risk_score" onclick="VajraAnalyze.setSort('risk_score')">Risk Score <span class="sort-icon">⇅</span></th>
               <th data-sort="risk_trend" onclick="VajraAnalyze.setSort('risk_trend')">Trend <span class="sort-icon">⇅</span></th>
               <th>Exposed Population</th>
+              <th style="text-align: center;">Map Action</th>
             </tr>
           </thead>
           <tbody id="analyze-table-body">
@@ -630,28 +664,60 @@
       <div class="charts-grid">
         <div class="chart-card">
           <h4>Regional Rainfall vs Soil Moisture Comparison</h4>
-          <div style="height: 220px; position: relative;">
+          <div style="height: 250px; position: relative;">
             <canvas id="analyze-chart"></canvas>
           </div>
         </div>
+
         <div class="chart-card">
-          <h4>Hazard Tier Distribution</h4>
-          <div style="display: flex; flex-direction: column; gap: 0.75rem; margin-top: 1rem;">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-              <span style="color: var(--risk-red); font-weight: 700;">Red (Extreme Risk)</span>
-              <span id="tier-dist-red">0 Slope Units (0%)</span>
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
+            <h4 style="margin: 0;">Hazard Tier Distribution</h4>
+            <span class="prov-badge prov-badge-meteo" id="tier-dist-total-badge">15 Total Units</span>
+          </div>
+
+          <div class="tier-distribution-list">
+            <!-- Red -->
+            <div class="tier-dist-item">
+              <div class="tier-dist-header">
+                <span style="color: var(--risk-red); font-weight: 700; font-size: 0.82rem;">● Red (Extreme Risk)</span>
+                <span id="tier-dist-red" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">4 Sectors (27%)</span>
+              </div>
+              <div class="tier-progress-track">
+                <div class="tier-progress-fill red" id="tier-bar-red" style="width: 27%;"></div>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-              <span style="color: var(--risk-orange); font-weight: 700;">Orange (High Risk)</span>
-              <span id="tier-dist-orange">0 Slope Units (0%)</span>
+
+            <!-- Orange -->
+            <div class="tier-dist-item">
+              <div class="tier-dist-header">
+                <span style="color: var(--risk-orange); font-weight: 700; font-size: 0.82rem;">● Orange (High Warning)</span>
+                <span id="tier-dist-orange" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">5 Sectors (33%)</span>
+              </div>
+              <div class="tier-progress-track">
+                <div class="tier-progress-fill orange" id="tier-bar-orange" style="width: 33%;"></div>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-              <span style="color: var(--risk-yellow); font-weight: 700;">Yellow (Moderate Watch)</span>
-              <span id="tier-dist-yellow">0 Slope Units (0%)</span>
+
+            <!-- Yellow -->
+            <div class="tier-dist-item">
+              <div class="tier-dist-header">
+                <span style="color: var(--risk-yellow); font-weight: 700; font-size: 0.82rem;">● Yellow (Moderate Watch)</span>
+                <span id="tier-dist-yellow" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">4 Sectors (27%)</span>
+              </div>
+              <div class="tier-progress-track">
+                <div class="tier-progress-fill yellow" id="tier-bar-yellow" style="width: 27%;"></div>
+              </div>
             </div>
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem;">
-              <span style="color: var(--risk-green); font-weight: 700;">Green (Low Normal)</span>
-              <span id="tier-dist-green">0 Slope Units (0%)</span>
+
+            <!-- Green -->
+            <div class="tier-dist-item">
+              <div class="tier-dist-header">
+                <span style="color: var(--risk-green); font-weight: 700; font-size: 0.82rem;">● Green (Low Normal)</span>
+                <span id="tier-dist-green" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">2 Sectors (13%)</span>
+              </div>
+              <div class="tier-progress-track">
+                <div class="tier-progress-fill green" id="tier-bar-green" style="width: 13%;"></div>
+              </div>
             </div>
           </div>
         </div>

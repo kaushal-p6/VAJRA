@@ -100,8 +100,7 @@ const VajraLiveFeed = {
       VajraUI.updateKPICards();
       VajraAlerts.updateEmergencyBanner();
       if (VajraUI.activeTab === "analyze") {
-        VajraAnalyze.renderTable();
-        VajraAnalyze.renderChart();
+        VajraAnalyze.render();
       }
     }
 
@@ -138,7 +137,7 @@ const VajraLiveFeed = {
     });
 
     if (VajraUI.activeTab === "analyze") {
-      VajraAnalyze.renderTable();
+      VajraAnalyze.render();
     }
   },
 
