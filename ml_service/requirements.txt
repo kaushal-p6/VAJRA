@@ -2,4 +2,18 @@ fastapi>=0.110
 uvicorn>=0.29
 joblib>=1.3
 pandas>=2.0
+numpy>=1.26
+scipy>=1.11
+shapely>=2.0
 geopandas>=0.14
+rasterio>=1.3
+# IMPORTANT: pin scikit-learn to the EXACT version you trained the models with
+# (run `pip show scikit-learn` in your training venv). Pickled models can fail
+# or silently misbehave under a different version.
+scikit-learn
+xarray>=2024.1
+h5netcdf
+h5py
+netCDF4
+earthaccess
+cdsapi
