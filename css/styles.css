@@ -472,6 +472,12 @@ h1, h2, h3, h4, h5, h6 {
   box-shadow: var(--shadow-sm);
 }
 
+/* DEM Topographic Basemap - Softened & Lightened to reduce harsh contrast */
+.topo-dimmed-layer {
+  filter: contrast(0.86) brightness(1.06) saturate(0.90) !important;
+  opacity: 0.92 !important;
+}
+
 .map-layer-btn {
   background: transparent;
   border: none;

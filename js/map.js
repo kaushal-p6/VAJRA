@@ -46,10 +46,27 @@ const VajraMap = {
     L.control.zoom({ position: "bottomright" }).addTo(this.map);
 
     // Basemaps
-    this.tileLayers.satellite = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.satellite.url, { attribution: VAJRA_CONFIG.TILE_PROVIDERS.satellite.attribution });
-    this.tileLayers.standard = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.standard.url, { subdomains: ["a", "b", "c"], attribution: VAJRA_CONFIG.TILE_PROVIDERS.standard.attribution });
-    this.tileLayers.elevation = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.elevation.url, { attribution: VAJRA_CONFIG.TILE_PROVIDERS.elevation.attribution });
-    this.tileLayers.terrain = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.terrain.url, { attribution: VAJRA_CONFIG.TILE_PROVIDERS.terrain.attribution });
+    this.tileLayers.satellite = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.satellite.url, { 
+      attribution: VAJRA_CONFIG.TILE_PROVIDERS.satellite.attribution,
+      maxZoom: 18
+    });
+    this.tileLayers.standard = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.standard.url, { 
+      subdomains: ["a", "b", "c"], 
+      attribution: VAJRA_CONFIG.TILE_PROVIDERS.standard.attribution,
+      maxZoom: 18
+    });
+    this.tileLayers.elevation = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.elevation.url, { 
+      subdomains: ["a", "b", "c"],
+      attribution: VAJRA_CONFIG.TILE_PROVIDERS.elevation.attribution,
+      className: "topo-dimmed-layer",
+      maxNativeZoom: 15,
+      maxZoom: 16
+    });
+    this.tileLayers.terrain = L.tileLayer(VAJRA_CONFIG.TILE_PROVIDERS.terrain.url, { 
+      attribution: VAJRA_CONFIG.TILE_PROVIDERS.terrain.attribution,
+      maxNativeZoom: 13,
+      maxZoom: 14
+    });
 
     // Add Default Basemap
     this.tileLayers.satellite.addTo(this.map);
@@ -156,7 +173,12 @@ const VajraMap = {
       }
       this.activeBasemap = 'maptiler_hybrid';
 
-      const currentRegion = this.selectedRegion || VAJRA_DATA.REGIONS[0];
+      // 3D map will always by default focus on the region with the highest risk score
+      const highestRiskRegion = VAJRA_DATA.REGIONS.reduce((max, r) => (r.risk_score || 0) > (max.risk_score || 0) ? r : max, VAJRA_DATA.REGIONS[0]);
+      const currentRegion = highestRiskRegion;
+      this.selectedRegion = currentRegion;
+      this.updateInspectorUI(currentRegion);
+
       // SAFETY/BUGFIX: previously read safeData.lat/.lon directly, which is
       // undefined for a real live nearest_safe_zone ({name, distance_km}
       // only) — that silently produced [NaN, NaN] as the 3D view center.
@@ -178,7 +200,13 @@ const VajraMap = {
           antialias: true
         });
 
+        this.maplibreInstance.on('error', (e) => {
+          console.warn("MapLibre 3D:", e.error?.message || e);
+        });
+
         this.maplibreInstance.on('load', () => {
+          this.maplibreInstance.resize();
+
           // Add 3D DEM terrain
           if (!this.maplibreInstance.getSource('maptiler-terrain')) {
             this.maplibreInstance.addSource('maptiler-terrain', {
@@ -189,17 +217,23 @@ const VajraMap = {
               encoding: 'mapbox'
             });
           }
-          this.maplibreInstance.setTerrain({ source: 'maptiler-terrain', exaggeration: 1.8 });
+          try {
+            this.maplibreInstance.setTerrain({ source: 'maptiler-terrain', exaggeration: 1.8 });
+          } catch (err) {
+            console.warn("3D terrain set error:", err);
+          }
 
           // Atmospheric sky
-          this.maplibreInstance.setSky({
-            'sky-color': '#38bdf8',
-            'sky-horizon-blend': 0.5,
-            'horizon-color': '#bae6fd',
-            'horizon-fog-blend': 0.5,
-            'fog-color': '#e0f2fe',
-            'fog-ground-blend': 0.3
-          });
+          try {
+            this.maplibreInstance.setSky({
+              'sky-color': '#38bdf8',
+              'horizon-color': '#bae6fd',
+              'fog-color': '#e0f2fe',
+              'fog-ground-blend': 0.3
+            });
+          } catch (err) {
+            console.warn("3D sky set error:", err);
+          }
 
           // Add navigation controls
           this.maplibreInstance.addControl(new maplibregl.NavigationControl(), 'bottom-right');
@@ -208,7 +242,15 @@ const VajraMap = {
           this.render3DOverlays(currentRegion);
         });
 
+        setTimeout(() => {
+          if (this.maplibreInstance) this.maplibreInstance.resize();
+        }, 150);
+        setTimeout(() => {
+          if (this.maplibreInstance) this.maplibreInstance.resize();
+        }, 400);
+
       } else if (this.maplibreInstance) {
+        this.maplibreInstance.resize();
         this.maplibreInstance.flyTo({
           center: targetCenter,
           zoom: 12.8,
@@ -216,8 +258,12 @@ const VajraMap = {
           bearing: -20,
           duration: 1000
         });
-        this.maplibreInstance.resize();
-        this.render3DOverlays(currentRegion);
+        setTimeout(() => {
+          if (this.maplibreInstance) {
+            this.maplibreInstance.resize();
+            this.render3DOverlays(currentRegion);
+          }
+        }, 100);
       }
 
     } else {
@@ -230,6 +276,21 @@ const VajraMap = {
       }
 
       if (!this.tileLayers[layerKey] || this.activeBasemap === layerKey) return;
+
+      // Dynamic Zoom Limit per layer provider to avoid missing tile errors
+      if (layerKey === 'elevation') {
+        this.map.setMaxZoom(16);
+        if (this.map.getZoom() > 16) {
+          this.map.setZoom(16);
+        }
+      } else if (layerKey === 'terrain') {
+        this.map.setMaxZoom(14);
+        if (this.map.getZoom() > 14) {
+          this.map.setZoom(14);
+        }
+      } else {
+        this.map.setMaxZoom(VAJRA_CONFIG.MAP_INIT.maxZoom || 18);
+      }
 
       // Hide MapLibre, show Leaflet
       if (ml3dContainer) {
