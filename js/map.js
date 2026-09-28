@@ -16,13 +16,6 @@ const VajraMap = {
   overlayLayers: {
     risk_polygons: L.layerGroup(),
     beacon_markers: L.layerGroup(),
-    // BUGFIX: previously a single shared "historical_events" group held both
-    // landslide and flood markers, so the "Historical Landslides" and
-    // "Historical Floods" checkboxes both toggled the exact same layer —
-    // switching one off also hid the other's markers. Split into two
-    // independently toggleable groups.
-    historical_landslides: L.layerGroup(),
-    historical_floods: L.layerGroup(),
     hospitals: L.layerGroup(),
     emergency_facilities: L.layerGroup(),
     rivers: L.layerGroup(),
@@ -90,9 +83,24 @@ const VajraMap = {
     // Add Overlay Layer Groups to Map
     Object.values(this.overlayLayers).forEach(layerGroup => layerGroup.addTo(this.map));
 
-    this.map.on("zoomend", () => this.handleZoomLevelChange());
+    this.map.on("zoom", () => {
+      this.handleZoomLevelChange();
+      this.updateMarkerDispersal();
+      this.updateRouteBadgePosition();
+    });
+    this.map.on("zoomend", () => {
+      this.handleZoomLevelChange();
+      this.updateMarkerDispersal();
+      this.updateRouteBadgePosition();
+    });
+    this.map.on("move", () => {
+      this.updateMarkerDispersal();
+      this.updateRouteBadgePosition();
+    });
 
     this.renderOperationalOverlays();
+    this.handleZoomLevelChange();
+    this.updateMarkerDispersal();
   },
 
 
@@ -520,24 +528,40 @@ const VajraMap = {
       .addTo(this.maplibreInstance);
     this.maplibreMarkers.push(shieldMarker3D);
 
-    // Permanent Badge Label above Green Shield Marker (3D)
-    const labelEl = document.createElement('div');
-    labelEl.className = 'safe-zone-tooltip';
-    labelEl.style.transform = 'translateY(-16px)';
-    labelEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${primaryDest.name} · ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'distance unknown'}${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}</span>`;
-    const labelMarker3D = new maplibregl.Marker({ element: labelEl })
-      .setLngLat([destPt[1], destPt[0]])
-      .addTo(this.maplibreInstance);
-    this.maplibreMarkers.push(labelMarker3D);
+    // Safe Zone hover tooltip (opens only on hover, not permanent)
+    const hoverPopup3D = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: false })
+      .setHTML(`
+        <div style="font-family:Inter,sans-serif;font-size:11px;padding:3px 6px;color:#0f172a;">
+          <strong style="color:#16a34a;display:inline-flex;align-items:center;gap:4px;">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+            ${primaryDest.name}
+          </strong><br/>
+          Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</strong>
+          ${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}
+        </div>
+      `);
+    shieldEl.addEventListener('mouseenter', () => {
+      hoverPopup3D.setLngLat([destPt[1], destPt[0]]).addTo(this.maplibreInstance);
+    });
+    shieldEl.addEventListener('mouseleave', () => {
+      hoverPopup3D.remove();
+    });
 
-    // Floating Mid-Route Distance Badge (3D)
+    // Floating Mid-Route Distance Badge (3D) — offset off the dashed corridor
+    const dLat3D = destPt[0] - startPt[0];
+    const dLon3D = destPt[1] - startPt[1];
+    const isNorthSouth3D = Math.abs(dLat3D) > Math.abs(dLon3D) * 1.1;
+
     const badgeEl = document.createElement('div');
-    badgeEl.className = 'route-badge';
+    badgeEl.className = isNorthSouth3D ? 'route-badge route-badge-side' : 'route-badge route-badge-above';
     badgeEl.innerHTML = `
       <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
       <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>+${primaryDest.relative_safe_height_m}m safe</span>` : ''}
     `;
-    const badgeMarker3D = new maplibregl.Marker({ element: badgeEl })
+    const badgeMarker3D = new maplibregl.Marker({
+      element: badgeEl,
+      offset: isNorthSouth3D ? [75, 0] : [0, -42]
+    })
       .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
       .addTo(this.maplibreInstance);
     this.maplibreMarkers.push(badgeMarker3D);
@@ -636,71 +660,41 @@ const VajraMap = {
       this.overlayLayers.risk_polygons.addLayer(polygon);
       this.regionLayers.push({ layer: polygon, tier: region.risk_tier, region: region });
 
-      // Hazard Beacons for Red/Orange
-      if (isRed || isOrange) {
-        // IMPROVEMENT: the old beacon was only an expanding, fading ring
-        // with no solid center — on busy satellite imagery it frequently
-        // read as a faint smudge rather than a marker, and carried no
-        // information of its own. Replace it with a beacon that has a
-        // solid, legible core showing the risk percentage, plus the
-        // pulsing ring around it for attention.
-        const pct = Math.round((region.risk_score || 0) * 100);
-        const tierWord = isRed ? "red" : "orange";
-        const beaconIcon = L.divIcon({
-          className: "",
-          html: `
-            <div class="hazard-beacon hazard-beacon-${tierWord}">
+      // Region Probability Beacon & Label for all monitored regions
+      // In overview/whole map view: ONLY the percentage core is displayed (zero text).
+      // When zoomed in to that region: the village label appears neatly below without overlapping.
+      const pct = Math.round((region.risk_score || 0) * 100);
+      const tierWord = isRed ? "red" : isOrange ? "orange" : isYellow ? "yellow" : "green";
+      const beaconIcon = L.divIcon({
+        className: "beacon-icon-wrapper",
+        html: `
+          <div class="hazard-beacon hazard-beacon-${tierWord}">
+            ${isRed || isOrange ? `
               <span class="hazard-beacon-wave wave-1"></span>
               <span class="hazard-beacon-wave wave-2"></span>
               <span class="hazard-beacon-wave wave-3"></span>
-              <span class="hazard-beacon-core">${pct}%</span>
-            </div>
-          `,
-          iconSize: [40, 40],
-          iconAnchor: [20, 20]
-        });
+            ` : `
+              <span class="hazard-beacon-wave wave-1"></span>
+            `}
+            <span class="hazard-beacon-core">${pct}%</span>
+            <div class="beacon-label">${region.village}</div>
+          </div>
+        `,
+        iconSize: [34, 34],
+        iconAnchor: [17, 17]
+      });
 
-        // FIX: Leaflet auto-ranks markers by their vertical screen position
-        // (lower on screen = stacked higher), so when zoomed out and markers
-        // cluster together, a hospital/emergency pin sitting just below a
-        // beacon could render on top of it. A high zIndexOffset keeps
-        // hazard beacons above every other marker regardless of position.
-        const beaconMarker = L.marker(region.center, { icon: beaconIcon, zIndexOffset: 1000 });
-        beaconMarker.bindTooltip(`HAZARD ZONE: ${region.village} — ${pct}% (${region.risk_tier})`, { permanent: false });
-        beaconMarker.on("click", () => this.selectRegion(region));
+      const beaconMarker = L.marker(region.center, { icon: beaconIcon, zIndexOffset: 1000 });
+      beaconMarker.bindTooltip(`HAZARD ZONE: ${region.village} — ${pct}% (${region.risk_tier})`, { permanent: false });
+      beaconMarker.on("click", () => this.selectRegion(region));
 
-        this.beaconLayers.push(beaconMarker);
-        this.overlayLayers.beacon_markers.addLayer(beaconMarker);
-      }
+      this.beaconLayers.push({ marker: beaconMarker, region: region });
+      this.overlayLayers.beacon_markers.addLayer(beaconMarker);
     });
 
-    // 2. Render Historical Disaster Event Markers (GSI & CWC Records)
-    if (VAJRA_DATA.HISTORICAL_DISASTER_CATALOG) {
-      VAJRA_DATA.HISTORICAL_DISASTER_CATALOG.forEach(evt => {
-        const evtMarker = L.circleMarker(evt.coordinates, {
-          radius: 7,
-          color: "#7c3aed",
-          fillColor: "#a78bfa",
-          fillOpacity: 0.85,
-          weight: 2
-        });
+    this.updateMarkerDispersal();
 
-        evtMarker.bindTooltip(`
-          <div style="font-family: Inter, sans-serif; font-size: 0.8rem; color: #0f172a;">
-            <strong style="color: #7c3aed; display:inline-flex; align-items:center; gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Historical Event (${evt.date})</strong><br/>
-            ${evt.location} (${evt.district})<br/>
-            Hazard: <strong>${evt.hazard_type}</strong><br/>
-            Severity: <strong>${evt.severity}</strong> | Rain: <strong>${evt.rainfall_around_event_24h}</strong><br/>
-            Source: <em>${evt.source}</em>
-          </div>
-        `, { sticky: true });
 
-        const targetGroup = evt.category === "flood"
-          ? this.overlayLayers.historical_floods
-          : this.overlayLayers.historical_landslides; // default: landslide
-        targetGroup.addLayer(evtMarker);
-      });
-    }
 
     // 3. Render Infrastructure Markers (Hospitals & Emergency Stations)
     // IMPROVEMENT: flat 6px circle dots were easy to lose against busy
@@ -781,7 +775,199 @@ const VajraMap = {
 
   handleZoomLevelChange() {
     if (!this.map) return;
-    // Evacuation routes and safe haven shields stay persistent across all zoom levels
+    const currentZoom = this.map.getZoom();
+    const isOverview = currentZoom < 10;
+
+    const container = document.getElementById("map");
+    if (container) {
+      container.classList.toggle("map-zoom-overview", isOverview);
+      container.classList.toggle("map-zoom-detail", !isOverview);
+    }
+
+    // When viewing overview / whole map (zoom < 10), hide the local evacuation route, badge and safe zone shield
+    if (isOverview) {
+      if (this.map.hasLayer(this.overlayLayers.route_layer)) {
+        this.map.removeLayer(this.overlayLayers.route_layer);
+      }
+    } else {
+      const routeCheckbox = document.getElementById("layer_routes");
+      if ((!routeCheckbox || routeCheckbox.checked) && this.selectedRegion) {
+        if (!this.map.hasLayer(this.overlayLayers.route_layer)) {
+          this.overlayLayers.route_layer.addTo(this.map);
+        }
+      }
+    }
+    this.updateMarkerDispersal();
+    this.updateRouteBadgePosition();
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // ANTI-COLLISION & RADIAL SPREAD: Prevent probability markers from
+  // stacking on top of each other at lower/medium zoom levels,
+  // strictly clamped within Uttarakhand/India borders (no drift into China/Nepal)
+  // ─────────────────────────────────────────────────────────────
+  updateMarkerDispersal() {
+    if (!this.map || !this.beaconLayers || this.beaconLayers.length === 0) return;
+
+    // Dynamic zoom scaling factor
+    const zoom = this.map.getZoom();
+    const badgeScale = Math.max(0.72, Math.min(1.0, 0.72 + (zoom - 6) * 0.05));
+    document.documentElement.style.setProperty('--map-beacon-scale', badgeScale.toFixed(2));
+
+    const MIN_DIST = 26; // Minimum pixel clearance between badge centers
+    const MIN_DIST_SQ = MIN_DIST * MIN_DIST;
+
+    // 1. Project all markers to screen points at their true geographic base coordinates
+    const items = this.beaconLayers.map(item => {
+      const pt = this.map.latLngToLayerPoint(item.region.center);
+      return {
+        marker: item.marker,
+        region: item.region,
+        baseCenter: item.region.center,
+        basePt: pt,
+        currentPt: { x: pt.x, y: pt.y },
+        clusterId: -1
+      };
+    });
+
+    // 2. Identify clusters of overlapping markers in screen space
+    let nextClusterId = 0;
+    for (let i = 0; i < items.length; i++) {
+      for (let j = i + 1; j < items.length; j++) {
+        const dx = items[i].basePt.x - items[j].basePt.x;
+        const dy = items[i].basePt.y - items[j].basePt.y;
+        if (dx * dx + dy * dy < MIN_DIST_SQ) {
+          if (items[i].clusterId === -1 && items[j].clusterId === -1) {
+            items[i].clusterId = nextClusterId;
+            items[j].clusterId = nextClusterId;
+            nextClusterId++;
+          } else if (items[i].clusterId !== -1 && items[j].clusterId === -1) {
+            items[j].clusterId = items[i].clusterId;
+          } else if (items[i].clusterId === -1 && items[j].clusterId !== -1) {
+            items[i].clusterId = items[j].clusterId;
+          } else if (items[i].clusterId !== items[j].clusterId) {
+            const oldId = items[j].clusterId;
+            const newId = items[i].clusterId;
+            items.forEach(it => { if (it.clusterId === oldId) it.clusterId = newId; });
+          }
+        }
+      }
+    }
+
+    // 3. For any overlapping cluster, fan out badges subtly around their centroid
+    const clusters = {};
+    items.forEach(it => {
+      if (it.clusterId !== -1) {
+        if (!clusters[it.clusterId]) clusters[it.clusterId] = [];
+        clusters[it.clusterId].push(it);
+      }
+    });
+
+    Object.values(clusters).forEach(group => {
+      if (group.length <= 1) return;
+
+      const avgX = group.reduce((sum, it) => sum + it.basePt.x, 0) / group.length;
+      const avgY = group.reduce((sum, it) => sum + it.basePt.y, 0) / group.length;
+
+      // Sort items by their true geographic angle from the centroid to preserve real-world orientation
+      group.sort((a, b) => {
+        const angleA = Math.atan2(a.basePt.y - avgY, a.basePt.x - avgX);
+        const angleB = Math.atan2(b.basePt.y - avgY, b.basePt.x - avgX);
+        return angleA - angleB;
+      });
+
+      // Subtle, tight radial spread (12-14px) so they are individually distinct but stay firmly within the district
+      const radius = Math.max(12, 10 + group.length * 1.2);
+      const angleStep = (2 * Math.PI) / group.length;
+      const startAngle = Math.atan2(group[0].basePt.y - avgY, group[0].basePt.x - avgX);
+
+      group.forEach((it, idx) => {
+        const angle = startAngle + idx * angleStep;
+        it.currentPt.x = avgX + Math.cos(angle) * radius;
+        it.currentPt.y = avgY + Math.sin(angle) * radius;
+      });
+    });
+
+    // 4. Update marker positions (dispersed when clustered, true center when clear)
+    items.forEach(it => {
+      if (it.clusterId !== -1) {
+        const targetLatLng = this.map.layerPointToLatLng(L.point(it.currentPt.x, it.currentPt.y));
+        let clampedLat = targetLatLng.lat;
+        let clampedLng = targetLatLng.lng;
+
+        // Border safety clamp: ensure coordinates never cross into Tibet/China or Nepal
+        if (it.baseCenter[0] > 29.0 && it.baseCenter[0] < 32.0) {
+          // Uttarakhand sector: keep within [30.35, 31.06] N, [78.10, 79.05] E
+          clampedLat = Math.min(31.06, Math.max(30.35, clampedLat));
+          clampedLng = Math.min(79.05, Math.max(78.10, clampedLng));
+        } else {
+          // National boundary safeguard
+          clampedLat = Math.min(35.5, Math.max(8.0, clampedLat));
+          clampedLng = Math.min(97.0, Math.max(68.0, clampedLng));
+        }
+
+        it.marker.setLatLng([clampedLat, clampedLng]);
+      } else {
+        it.marker.setLatLng(it.baseCenter);
+      }
+    });
+  },
+
+  // ─────────────────────────────────────────────────────────────
+  // DYNAMIC BADGE POSITIONING & SCALING: Keeps route info badge safely
+  // offset to the side, preventing any overlap with safe zone symbol;
+  // strictly hidden when zoomed out (zoom < 10)
+  // ─────────────────────────────────────────────────────────────
+  activeRouteData: null,
+  routeBadgeMarker: null,
+
+  updateRouteBadgePosition() {
+    if (!this.map || !this.routeBadgeMarker || !this.activeRouteData) return;
+    const zoom = this.map.getZoom();
+
+    // The route badge is ONLY visible when zoomed in to the region (zoom >= 10)
+    if (zoom < 10) {
+      if (this.overlayLayers.route_layer && this.overlayLayers.route_layer.hasLayer(this.routeBadgeMarker)) {
+        this.overlayLayers.route_layer.removeLayer(this.routeBadgeMarker);
+      }
+      return;
+    } else {
+      if (this.overlayLayers.route_layer && !this.overlayLayers.route_layer.hasLayer(this.routeBadgeMarker)) {
+        this.overlayLayers.route_layer.addLayer(this.routeBadgeMarker);
+      }
+    }
+
+    const { startPt, destPt } = this.activeRouteData;
+
+    const ptStart = this.map.latLngToLayerPoint(startPt);
+    const ptDest = this.map.latLngToLayerPoint(destPt);
+
+    const dx = ptDest.x - ptStart.x;
+    const dy = ptDest.y - ptStart.y;
+    const len = Math.hypot(dx, dy) || 1;
+
+    let nx = -dy / len;
+    let ny = dx / len;
+
+    // Prefer placing badge towards upper/right side on screen
+    if (ny > 0) {
+      nx = -nx;
+      ny = -ny;
+    }
+
+    // Place badge 35% along path from startPt (well away from destPt shield at 100%)
+    // and offset 24px perpendicular to the corridor
+    const t = 0.35;
+    const perpOffset = 24;
+    const bx = ptStart.x + dx * t + nx * perpOffset;
+    const by = ptStart.y + dy * t + ny * perpOffset;
+
+    const badgeLatLng = this.map.layerPointToLatLng(L.point(bx, by));
+    this.routeBadgeMarker.setLatLng(badgeLatLng);
+
+    // Dynamic zoom-based scaling for badge
+    const badgeScale = Math.max(0.75, Math.min(1.05, 0.75 + (zoom - 10) * 0.08));
+    document.documentElement.style.setProperty('--route-badge-scale', badgeScale.toFixed(2));
   },
 
   toggleOverlayGroup(layerId, isChecked) {
@@ -801,12 +987,6 @@ const VajraMap = {
           }
         });
       }
-    } else if (layerId === "layer_hist_landslides") {
-      if (isChecked) this.overlayLayers.historical_landslides.addTo(this.map);
-      else this.map.removeLayer(this.overlayLayers.historical_landslides);
-    } else if (layerId === "layer_hist_floods") {
-      if (isChecked) this.overlayLayers.historical_floods.addTo(this.map);
-      else this.map.removeLayer(this.overlayLayers.historical_floods);
     } else if (layerId === "layer_hospitals") {
       if (isChecked) this.overlayLayers.hospitals.addTo(this.map);
       else this.map.removeLayer(this.overlayLayers.hospitals);
@@ -833,12 +1013,13 @@ const VajraMap = {
     if (!region) return;
     this.selectedRegion = region;
 
-    // Ensure route layer is always attached and visible on map
+    // Ensure route layer is always attached and visible for the active region
+    const routeCheckbox = document.getElementById("layer_routes");
+    if (routeCheckbox) routeCheckbox.checked = true;
+
     if (this.map && !this.map.hasLayer(this.overlayLayers.route_layer)) {
       this.overlayLayers.route_layer.addTo(this.map);
     }
-    const routeCheckbox = document.getElementById("layer_routes");
-    if (routeCheckbox) routeCheckbox.checked = true;
 
     if (flyTo && this.map) {
       // Calculate bounds encompassing danger area + safe zone shelter
@@ -874,47 +1055,18 @@ const VajraMap = {
 
     this.drawTopographicSafeZoneRoute(region);
     this.updateInspectorUI(region);
+    this.updateMarkerDispersal();
+    this.updateRouteBadgePosition();
   },
 
   drawTopographicSafeZoneRoute(region) {
     this.overlayLayers.route_layer.clearLayers();
     if (!region) return;
 
-    // ─────────────────────────────────────────────────────────────
-    // Resolve primary safe zone honestly — see resolveSafeDestination()
-    // for why this no longer fabricates coordinates/capacity/contact.
-    // ─────────────────────────────────────────────────────────────
+    const startPt = region.center; // [lat, lon] — hazard danger center
     const highGround = region.candidate_safe_high_ground;
     const primaryDest = this.resolveSafeDestination(region);
 
-    const startPt = region.center; // [lat, lon] — hazard danger center
-
-    // ─────────────────────────────────────────────────────────────
-    // 1. DANGER ORIGIN PIN — pulsing red circle at hazard centre
-    //    (always shown, regardless of whether a safe zone is known)
-    // ─────────────────────────────────────────────────────────────
-    const dangerIcon = L.divIcon({
-      className: '',
-      html: `<div class="danger-origin-pin" title="Hazard Danger Center"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>`,
-      iconSize: [32, 32],
-      iconAnchor: [16, 16]
-    });
-    const dangerMarker = L.marker(startPt, { icon: dangerIcon, zIndexOffset: 950 });
-    dangerMarker.bindTooltip(`
-      <div style="font-family:Inter,sans-serif;font-size:0.82rem;color:#0f172a;min-width:180px;">
-        <strong style="color:#dc2626;display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#dc2626" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Hazard Center — ${region.village}</strong><br/>
-        Risk Score: <strong>${Math.round((region.risk_score || 0) * 100)}%</strong> [${region.risk_tier} Tier]<br/>
-        Hazard: <strong>${region.hazard_type || 'Landslide / Flash Flood'}</strong><br/>
-        Impact Window: <strong>${region.expected_time_to_impact_hours != null ? region.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
-      </div>
-    `, { sticky: true });
-    this.overlayLayers.route_layer.addLayer(dangerMarker);
-
-    // SAFETY: region.nearest_safe_zone === null is a correct result
-    // (already-safe terrain, or an unreachable road fragment — see the
-    // report's field notes). Don't draw a fabricated route/pin in that
-    // case, or when we simply lack real coordinates for the destination
-    // the live API did report.
     if (!primaryDest || !primaryDest.hasCoordinates) {
       return;
     }
@@ -922,7 +1074,7 @@ const VajraMap = {
     const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon] — shelter destination
 
     // ─────────────────────────────────────────────────────────────
-    // 2. DASHED GREEN EVACUATION WALKING ROUTE POLYLINE
+    // 1. DASHED GREEN EVACUATION WALKING ROUTE POLYLINE
     // ─────────────────────────────────────────────────────────────
     const evacuationRoute = L.polyline([startPt, destPt], {
       className: 'evac-route-path',
@@ -940,45 +1092,53 @@ const VajraMap = {
     this.overlayLayers.route_layer.addLayer(evacuationRoute);
 
     // ─────────────────────────────────────────────────────────────
-    // 3. MID-ROUTE DISTANCE & ELEVATION BADGE (tactical floating pill)
+    // 2. MID-ROUTE DISTANCE & ELEVATION BADGE (Offset cleanly on the side, scaling with zoom)
     // ─────────────────────────────────────────────────────────────
-    const midLat = (startPt[0] + destPt[0]) / 2;
-    const midLon = (startPt[1] + destPt[1]) / 2;
+    this.activeRouteData = { region, startPt, destPt, primaryDest };
+
     const badgeIcon = L.divIcon({
       className: '',
       html: `
-        <div class="route-badge">
-          <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
+        <div class="route-badge route-badge-side" id="active-route-badge">
+          <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
         </div>`,
-      iconSize: [250, 34],
-      iconAnchor: [125, 17]
+      iconSize: [210, 24],
+      iconAnchor: [0, 12]
     });
-    const badgeMarker = L.marker([midLat, midLon], { icon: badgeIcon, interactive: false, zIndexOffset: 600 });
-    this.overlayLayers.route_layer.addLayer(badgeMarker);
+    this.routeBadgeMarker = L.marker(startPt, { icon: badgeIcon, interactive: false, zIndexOffset: 600 });
+    this.overlayLayers.route_layer.addLayer(this.routeBadgeMarker);
+    this.updateRouteBadgePosition();
 
     // ─────────────────────────────────────────────────────────────
-    // 4. GREEN SHIELD MARKER AT NEAREST SAFE ZONE
+    // 3. GREEN SHIELD MARKER AT NEAREST SAFE ZONE
+    // Text is NOT permanent beside it; it opens cleanly on hover
     // ─────────────────────────────────────────────────────────────
     const shieldSVG = `
-      <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg">
+      <svg viewBox="0 0 24 24" width="28" height="28" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg">
         <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/>
         <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>`;
     const shieldIcon = L.divIcon({
       className: '',
       html: `<div class="safe-zone-shield" title="Designated Safe Zone">${shieldSVG}</div>`,
-      iconSize: [44, 44],
-      iconAnchor: [22, 22]
+      iconSize: [32, 32],
+      iconAnchor: [16, 16]
     });
     const shieldMarker = L.marker(destPt, { icon: shieldIcon, zIndexOffset: 1200 });
 
     shieldMarker.bindTooltip(
-      `<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${primaryDest.name} · ${primaryDest.distance_km} km${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}</span>`,
-      { permanent: true, direction: 'top', className: 'safe-zone-tooltip', offset: [0, -22] }
+      `<div style="font-family:Inter,sans-serif;font-size:0.8rem;color:#0f172a;min-width:180px;">
+        <strong style="color:#16a34a;display:inline-flex;align-items:center;gap:4px;">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          ${primaryDest.name}
+        </strong><br/>
+        Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} min walk)` : ''}<br/>
+        ${primaryDest.relative_safe_height_m != null ? `Safe High Ground: <strong style="color:#16a34a;">+${primaryDest.relative_safe_height_m}m elevation</strong>` : ''}
+      </div>`,
+      { permanent: false, direction: 'top', className: 'safe-zone-tooltip', offset: [0, -18] }
     );
 
-    // Interactive Detailed Popup on Click — every field is either real or
-    // explicitly marked "Not available", never a fabricated placeholder.
+    // Interactive Detailed Popup on Click
     shieldMarker.bindPopup(`
       <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
@@ -1001,7 +1161,7 @@ const VajraMap = {
     this.overlayLayers.route_layer.addLayer(shieldMarker);
 
     // ─────────────────────────────────────────────────────────────
-    // 5. SECONDARY CANDIDATE RIDGE HIGH-GROUND (if distinct from shelter)
+    // 4. SECONDARY CANDIDATE RIDGE HIGH-GROUND (if distinct from shelter)
     // ─────────────────────────────────────────────────────────────
     if (highGround && (Math.abs(highGround.lat - primaryDest.lat) > 0.001 || Math.abs(highGround.lon - primaryDest.lon) > 0.001)) {
       const ridgePt = [highGround.lat, highGround.lon];
@@ -1015,9 +1175,9 @@ const VajraMap = {
 
       const ridgeIcon = L.divIcon({
         className: '',
-        html: `<div style="background:#065f46;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1.5px solid #34d399;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;gap:3px;cursor:pointer;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${highGround.name.split(' ')[0]} Ridge (+${highGround.relative_safe_height_m}m)</span></div>`,
-        iconSize: [120, 24],
-        iconAnchor: [60, 12]
+        html: `<div class="ridge-crest-pin" title="${highGround.name}"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#ffffff" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></div>`,
+        iconSize: [26, 26],
+        iconAnchor: [13, 13]
       });
       const ridgeMarker = L.marker(ridgePt, { icon: ridgeIcon, zIndexOffset: 1000 });
       ridgeMarker.bindTooltip(`

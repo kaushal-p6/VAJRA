@@ -822,35 +822,38 @@ h1, h2, h3, h4, h5, h6 {
    marker that has a legible core showing the risk percentage, with the
    pulsing ring layered behind it purely for attention. */
 .hazard-beacon {
-  position: relative; width: 40px; height: 40px;
+  position: relative; width: 34px; height: 34px;
   display: flex; align-items: center; justify-content: center;
+  transform: scale(var(--map-beacon-scale, 1));
+  transform-origin: center center;
+  transition: transform 0.18s ease-out;
 }
 
 .hazard-beacon-core {
   position: relative; z-index: 2;
-  min-width: 38px; height: 38px; padding: 0 4px;
+  min-width: 32px; height: 32px; padding: 0 3px;
   border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.68rem; color: #fff;
-  border: 2.5px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.65rem; color: #fff;
+  border: 2px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
   letter-spacing: -0.2px;
 }
 
 .hazard-beacon-red .hazard-beacon-core { background: #dc2626; }
 .hazard-beacon-orange .hazard-beacon-core { background: #ea580c; }
+.hazard-beacon-yellow .hazard-beacon-core { background: #d97706; }
+.hazard-beacon-green .hazard-beacon-core { background: #16a34a; }
 
 .hazard-beacon-wave {
   position: absolute; z-index: 1; top: 50%; left: 50%;
-  width: 38px; height: 38px; margin: -19px 0 0 -19px;
+  width: 32px; height: 32px; margin: -16px 0 0 -16px;
   border-radius: 50%; pointer-events: none;
 }
 
-/* IMPROVEMENT: replaced the single fading pulse with three rings that
-   expand outward one after another, like ripples spreading from a stone
-   dropped in water, instead of one flash repeating. */
+/* Three ripple rings expanding outward for attention */
 .hazard-beacon-wave {
-  border: 2.5px solid transparent;
+  border: 2px solid transparent;
   animation: hazard-wave 2.4s infinite cubic-bezier(0, 0.55, 0.45, 1);
 }
 .hazard-beacon-wave.wave-2 { animation-delay: 0.8s; }
@@ -858,10 +861,61 @@ h1, h2, h3, h4, h5, h6 {
 
 .hazard-beacon-red .hazard-beacon-wave { border-color: rgba(220, 38, 38, 0.9); }
 .hazard-beacon-orange .hazard-beacon-wave { border-color: rgba(234, 88, 12, 0.9); animation-duration: 2.8s; }
+.hazard-beacon-yellow .hazard-beacon-wave { border-color: rgba(217, 119, 6, 0.75); animation-duration: 3.2s; }
+.hazard-beacon-green .hazard-beacon-wave { border-color: rgba(22, 163, 74, 0.65); animation-duration: 3.6s; }
 
 @keyframes hazard-wave {
-  0% { transform: scale(0.65); opacity: 0.9; border-width: 3px; }
-  100% { transform: scale(3.4); opacity: 0; border-width: 0.5px; }
+  0% { transform: scale(0.65); opacity: 0.9; border-width: 2.5px; }
+  100% { transform: scale(3.2); opacity: 0; border-width: 0.5px; }
+}
+
+/* Overview Mode (zoomed out): compact 24px beacons showing ONLY percentage core */
+.map-zoom-overview .hazard-beacon {
+  width: 24px;
+  height: 24px;
+}
+.map-zoom-overview .hazard-beacon-core {
+  min-width: 22px;
+  height: 22px;
+  font-size: 0.56rem;
+  border-width: 1.5px;
+  padding: 0 2px;
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+}
+.map-zoom-overview .hazard-beacon-wave {
+  width: 22px;
+  height: 22px;
+  margin: -11px 0 0 -11px;
+}
+
+/* Region Beacon Village Label — Strictly hidden in overview; shown only when zoomed in */
+.beacon-label {
+  display: none;
+}
+
+.map-zoom-overview .beacon-label {
+  display: none !important;
+}
+
+.map-zoom-detail .beacon-label {
+  display: block;
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 4px;
+  background: rgba(15, 23, 42, 0.92);
+  color: #f8fafc;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10;
 }
 
 /* Tactical radar pulse animation on active hazard-zone polygons */
@@ -910,31 +964,31 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 1. Safe-zone shield marker (green, pulsing glow) */
 .safe-zone-shield {
-  width: 42px; height: 42px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  filter: drop-shadow(0 0 8px rgba(22, 163, 74, 0.9));
+  filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.85));
   animation: shield-pulse 2.4s infinite ease-in-out;
   cursor: pointer;
 }
-.safe-zone-shield svg { width: 42px; height: 42px; }
+.safe-zone-shield svg { width: 30px; height: 30px; }
 
 @keyframes shield-pulse {
-  0%, 100% { filter: drop-shadow(0 0 6px rgba(22, 163, 74, 0.8)); transform: scale(1); }
-  50%       { filter: drop-shadow(0 0 18px rgba(22, 163, 74, 1));  transform: scale(1.12); }
+  0%, 100% { filter: drop-shadow(0 0 5px rgba(22, 163, 74, 0.8)); transform: scale(1); }
+  50%       { filter: drop-shadow(0 0 14px rgba(22, 163, 74, 1));  transform: scale(1.10); }
 }
 
 /* 2. Official government shelter pin (blue) */
 .gov-shelter-pin {
-  width: 36px; height: 36px;
+  width: 32px; height: 32px;
   display: flex; align-items: center; justify-content: center;
-  background: #1d4ed8; border: 3px solid #fff;
+  background: #1d4ed8; border: 2.5px solid #fff;
   border-radius: 50% 50% 50% 0; transform: rotate(-45deg);
   box-shadow: 0 3px 8px rgba(29, 78, 216, 0.6);
   animation: shelter-glow 3s infinite ease-in-out;
 }
 .gov-shelter-pin-inner {
   transform: rotate(45deg);
-  font-size: 1rem; line-height: 1;
+  font-size: 0.9rem; line-height: 1;
 }
 @keyframes shelter-glow {
   0%, 100% { box-shadow: 0 3px 8px rgba(29, 78, 216, 0.5); }
@@ -943,31 +997,113 @@ h1, h2, h3, h4, h5, h6 {
 
 /* 3. Hazard-origin danger pin (red) */
 .danger-origin-pin {
-  width: 32px; height: 32px;
+  width: 28px; height: 28px;
   display: flex; align-items: center; justify-content: center;
-  background: #dc2626; border: 3px solid #fff;
-  border-radius: 50%; box-shadow: 0 0 12px rgba(220, 38, 38, 0.8);
+  background: #dc2626; border: 2.5px solid #fff;
+  border-radius: 50%; box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
   animation: danger-pulse 1.6s infinite ease-in-out;
-  font-size: 1rem; line-height: 1; color: #fff; font-weight: 800;
+  font-size: 0.9rem; line-height: 1; color: #fff; font-weight: 800;
 }
 @keyframes danger-pulse {
-  0%, 100% { box-shadow: 0 0 8px rgba(220, 38, 38, 0.7); transform: scale(1); }
-  50%       { box-shadow: 0 0 22px rgba(220, 38, 38, 1); transform: scale(1.15); }
+  0%, 100% { box-shadow: 0 0 6px rgba(220, 38, 38, 0.7); transform: scale(1); }
+  50%       { box-shadow: 0 0 18px rgba(220, 38, 38, 1); transform: scale(1.12); }
 }
 
-/* 4. Mid-route distance & elevation badge */
+/* 4. Mid-route distance & elevation badge — offset cleanly from the dashed line with pointer */
 .route-badge {
-  background: rgba(15, 23, 42, 0.92);
-  color: #fff; border: 1.5px solid #16a34a;
-  border-radius: 8px; padding: 5px 10px;
-  font-family: Inter, sans-serif; font-size: 11px; font-weight: 700;
-  white-space: nowrap; backdrop-filter: blur(4px);
-  box-shadow: 0 3px 10px rgba(0,0,0,0.5);
-  line-height: 1.5;
+  background: rgba(15, 23, 42, 0.94);
+  color: #fff;
+  border: 1.5px solid #16a34a;
+  border-radius: 6px;
+  padding: 3px 8px;
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+  backdrop-filter: blur(6px);
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+  line-height: 1.35;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  position: relative;
+  pointer-events: auto;
+  transform: scale(var(--route-badge-scale, 1));
+  transform-origin: left center;
+  transition: transform 0.18s ease-out;
 }
-.route-badge .badge-dist { color: #4ade80; }
+.route-badge .badge-dist { color: #4ade80; font-weight: 800; }
 .route-badge .badge-time { color: #93c5fd; }
 .route-badge .badge-elev { color: #fbbf24; }
+
+/* Pointer arrow when badge is positioned above the dashed line */
+.route-badge-above::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid #16a34a;
+}
+
+/* Pointer arrow when badge is positioned to the side of a dashed line */
+.route-badge-side::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 4px solid transparent;
+  border-bottom: 4px solid transparent;
+  border-right: 5px solid #16a34a;
+}
+
+/* Overview Mode (zoomed out): route badge, evacuation line & shelter shield MUST be hidden */
+.map-zoom-overview .route-badge,
+.map-zoom-overview .safe-zone-shield,
+.map-zoom-overview .evac-route-path {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Detail Mode (zoomed in): visible and interactive */
+.map-zoom-detail .route-badge {
+  display: inline-flex !important;
+  opacity: 1 !important;
+}
+.map-zoom-detail .safe-zone-shield {
+  display: flex !important;
+  opacity: 1 !important;
+}
+.map-zoom-detail .evac-route-path {
+  display: stroke !important;
+  opacity: 0.95 !important;
+}
+
+/* Ridge crest candidate high-ground pin */
+.ridge-crest-pin {
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: #065f46;
+  border: 2px solid #34d399;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+.ridge-crest-pin:hover {
+  transform: scale(1.15);
+}
 
 /* 5. Animated dashes on the evacuation polyline — the SVG dash-offset
       trick is handled by Leaflet's className; we animate via the global
