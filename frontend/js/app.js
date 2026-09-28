@@ -37,6 +37,17 @@ const VajraUI = {
       }
     });
 
+    // Responsive Map & Layout Window Resize Listener
+    let resizeDebounce = null;
+    window.addEventListener("resize", () => {
+      clearTimeout(resizeDebounce);
+      resizeDebounce = setTimeout(() => {
+        if (typeof VajraMap !== "undefined" && VajraMap.map) {
+          VajraMap.map.invalidateSize();
+        }
+      }, 150);
+    });
+
     // 7. Initial Access Control Check:
     // If the visitor has not entered in this session, keep login screen active (concealing dashboard)
     const loginScreen = document.getElementById("vajra-login-screen");

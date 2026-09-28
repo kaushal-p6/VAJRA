@@ -582,7 +582,7 @@
       </div>
 
       <!-- Nationwide Rainfall Extremes -->
-      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.85rem; margin-bottom: 0.85rem;">
+      <div class="extremes-grid">
         <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 9px; padding: 0.75rem 1rem;">
           <div style="font-size: 0.72rem; color: #991b1b; text-transform: uppercase; font-weight: 800;">Highest Rainfall Region in Monitored Telemetry</div>
           <div id="nationwide-highest-rain" style="margin-top: 0.2rem;">Loading live telemetry...</div>
@@ -1033,7 +1033,7 @@
             C-DOT CBE • ITU-T CAP v1.2
           </span>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem 1rem; font-size: 0.82rem; color: #374151;">
+        <div class="dispatch-details-grid">
           <div>Target Sector: <strong id="dispatch-modal-region">Bhatwari, Uttarkashi</strong></div>
           <div>Risk Level: <strong id="dispatch-modal-risk" style="color: var(--risk-red);">94% [Extreme]</strong></div>
           <div>Rainfall: <strong id="dispatch-modal-rain">24h: 142mm | 72h: 184mm</strong></div>
@@ -1045,7 +1045,7 @@
         </div>
       </div>
 
-      <div style="display: flex; gap: 0.75rem;">
+      <div class="dispatch-actions-row">
         <button class="btn-danger-action" style="flex: 1.35; justify-content: center; padding: 0.75rem 1rem; font-size: 0.85rem;" onclick="VajraAlerts.confirmEmergencyBroadcast()">
           Transmit CAP Emergency Broadcast
         </button>

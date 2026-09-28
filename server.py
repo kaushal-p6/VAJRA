@@ -28,9 +28,9 @@ if __name__ == "__main__":
     socketserver.TCPServer.allow_reuse_address = True
     with socketserver.TCPServer(("", PORT), Handler) as httpd:
         print(f"===========================================================")
-        print(f"⚡ VAJRA Command Center Web Dashboard active!")
-        print(f"📍 Location: {DIRECTORY}")
-        print(f"🌐 Server URL: http://localhost:{PORT}")
+        print(f"[VAJRA] Command Center Web Dashboard active!")
+        print(f"[PATH] Location: {DIRECTORY}")
+        print(f"[HTTP] Server URL: http://localhost:{PORT}")
         print(f"===========================================================")
         try:
             httpd.serve_forever()
