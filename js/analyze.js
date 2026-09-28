@@ -387,7 +387,9 @@ const VajraAnalyze = {
 
     if (paginationControls) {
       let btnsHtml = `
-        <button class="page-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="VajraAnalyze.goToPage(${this.currentPage - 1})">◀</button>
+        <button class="page-btn" ${this.currentPage === 1 ? 'disabled' : ''} onclick="VajraAnalyze.goToPage(${this.currentPage - 1})" aria-label="Previous Page">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
       `;
 
       for (let p = 1; p <= totalPages; p++) {
@@ -397,7 +399,9 @@ const VajraAnalyze = {
       }
 
       btnsHtml += `
-        <button class="page-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="VajraAnalyze.goToPage(${this.currentPage + 1})">▶</button>
+        <button class="page-btn" ${this.currentPage === totalPages ? 'disabled' : ''} onclick="VajraAnalyze.goToPage(${this.currentPage + 1})" aria-label="Next Page">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
       `;
 
       paginationControls.innerHTML = btnsHtml;

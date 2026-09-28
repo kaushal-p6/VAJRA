@@ -35,22 +35,16 @@
         <svg class="icon-svg icon-svg-lg" viewBox="0 0 24 24"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
       </div>
       <div class="brand-text">
-        <h1>VAJRA <span>EARLY WARNING</span></h1>
-        <div class="brand-subtitle">Village Alert & Just-in-time Risk Assessment</div>
+        <h1 class="brand-title">VAJRA</h1>
       </div>
     </div>
 
-    <!-- Highlighted Bold RED Clock (No Container Box, Independent of System Clock) -->
+    <!-- Highlighted Bold RED Clock (Single Line, Independent of System Clock) -->
     <div class="ist-clock-box" id="ist-clock-box" title="Real-Time Indian Standard Time — syncing...">
       <svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
       <span id="ist-clock-time">00:00:00 IST</span>
       <span class="gmt-tag">GMT+5:30</span>
     </div>
-
-    <!-- Live ML feed status: honestly shows whether the dashboard is
-         connected to the real prediction API or running on static demo
-         data, rather than presenting demo data as if it were live. -->
-    <span id="live-feed-status" class="live-feed-status demo" title="ML prediction API unreachable — showing static demo data">○ DEMO DATA</span>
 
     <!-- Navigation Tabs -->
     <nav class="nav-tabs">
@@ -70,11 +64,6 @@
 
     <!-- Header Actions -->
     <div class="header-right">
-      <button class="sim-btn" onclick="VajraUI.simulateMonsoonEvent()" title="Simulate Torrential Cloudburst Event">
-        <svg class="icon-svg" viewBox="0 0 24 24"><path d="M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"/><line x1="8" y1="16" x2="8.01" y2="16"/><line x1="12" y1="18" x2="12.01" y2="18"/><line x1="16" y1="16" x2="16.01" y2="16"/></svg>
-        <span>Simulate Rain Event</span>
-      </button>
-
       <!-- Notification Center Dropdown -->
       <div class="notif-wrapper">
         <button class="notif-icon-btn" onclick="VajraAlerts.toggleNotificationDrawer()" id="notif-trigger-btn" title="System Notifications">
@@ -228,7 +217,8 @@
               <span>Terrain</span>
             </button>
             <button class="map-layer-btn" data-layer="maptiler_hybrid" onclick="VajraMap.switchLayer('maptiler_hybrid')" title="True 3D Satellite – MapLibre GL + DEM Terrain (65° pitch, atmospheric sky)">
-              <span>🛰️ 3D Satellite</span>
+              <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+              <span>3D Satellite</span>
             </button>
 
             <!-- Fullscreen Map Option -->
@@ -245,25 +235,39 @@
                 <svg class="icon-svg" viewBox="0 0 24 24"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
                 <span>MAP LAYERS CONTROL</span>
               </h4>
-              <button class="modal-close-btn" onclick="VajraMap.toggleLayersDrawer()">✖</button>
+              <button class="modal-close-btn" onclick="VajraMap.toggleLayersDrawer()" aria-label="Close">
+                <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+              </button>
             </div>
             <div class="layers-drawer-body">
               <div>
                 <div class="layer-group-title">Risk Prediction (ML & Spatial)</div>
                 <label class="layer-checkbox-item">
-                  <span>🔴 Extreme Risk Zone</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="#dc2626"><circle cx="12" cy="12" r="9"/></svg>
+                    Extreme Risk Zone
+                  </span>
                   <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_extreme', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🟠 High Risk Zone</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="#ea580c"><circle cx="12" cy="12" r="9"/></svg>
+                    High Risk Zone
+                  </span>
                   <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_high', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🟡 Moderate Risk Zone</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="#d97706"><circle cx="12" cy="12" r="9"/></svg>
+                    Moderate Risk Zone
+                  </span>
                   <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_moderate', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🟢 Low Risk Zone</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="#16a34a"><circle cx="12" cy="12" r="9"/></svg>
+                    Low Risk Zone
+                  </span>
                   <input type="checkbox" checked onchange="VajraMap.toggleOverlayGroup('risk_low', this.checked)">
                 </label>
               </div>
@@ -271,15 +275,24 @@
               <div>
                 <div class="layer-group-title">Environmental Conditions</div>
                 <label class="layer-checkbox-item">
-                  <span>🌧 Rainfall Telemetry</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+                    Rainfall Telemetry
+                  </span>
                   <input type="checkbox" checked>
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>💧 Soil Moisture Layer</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.31 0z"/></svg>
+                    Soil Moisture Layer
+                  </span>
                   <input type="checkbox" checked>
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🌩 Rainfall Forecast Overlay</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 16.9A5 5 0 0 0 18 7h-1.26a8 8 0 1 0-11.62 9"/><polyline points="13 11 9 17 15 17 11 23"/></svg>
+                    Rainfall Forecast Overlay
+                  </span>
                   <input type="checkbox" checked>
                 </label>
               </div>
@@ -287,11 +300,17 @@
               <div>
                 <div class="layer-group-title">Terrain & Topography</div>
                 <label class="layer-checkbox-item">
-                  <span>⛰ Elevation & Contours</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
+                    Elevation & Contours
+                  </span>
                   <input type="checkbox" checked>
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>📐 Slope Angle Units</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><polygon points="3 20 21 20 21 4 3 20"/><line x1="9" y1="20" x2="9" y2="16"/><line x1="15" y1="20" x2="15" y2="12"/><line x1="21" y1="12" x2="17" y2="12"/></svg>
+                    Slope Angle Units
+                  </span>
                   <input type="checkbox" checked>
                 </label>
               </div>
@@ -299,7 +318,10 @@
               <div>
                 <div class="layer-group-title">Geography</div>
                 <label class="layer-checkbox-item">
-                  <span>🏞 Rivers & Drainage (Bhagirathi / Yamuna)</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>
+                    Rivers & Drainage (Bhagirathi / Yamuna)
+                  </span>
                   <input type="checkbox" id="layer_rivers" checked onchange="VajraMap.toggleOverlayGroup('layer_rivers', this.checked)">
                 </label>
               </div>
@@ -307,11 +329,17 @@
               <div>
                 <div class="layer-group-title">Hazard History</div>
                 <label class="layer-checkbox-item">
-                  <span>📜 Historical Landslides (GSI Catalog)</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                    Historical Landslides (GSI Catalog)
+                  </span>
                   <input type="checkbox" id="layer_hist_landslides" checked onchange="VajraMap.toggleOverlayGroup('layer_hist_landslides', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🌊 Historical Floods (CWC Records)</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.09 3 12.25c0 2.22 1.8 4.05 4 4.05z"/><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97"/></svg>
+                    Historical Floods (CWC Records)
+                  </span>
                   <input type="checkbox" id="layer_hist_floods" checked onchange="VajraMap.toggleOverlayGroup('layer_hist_floods', this.checked)">
                 </label>
               </div>
@@ -319,15 +347,24 @@
               <div>
                 <div class="layer-group-title">Exposure & Infrastructure</div>
                 <label class="layer-checkbox-item">
-                  <span>🏥 Emergency Hospitals</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+                    Emergency Hospitals
+                  </span>
                   <input type="checkbox" id="layer_hospitals" checked onchange="VajraMap.toggleOverlayGroup('layer_hospitals', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🚒 Emergency Posts & Fire Stations</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>
+                    Emergency Posts & Fire Stations
+                  </span>
                   <input type="checkbox" id="layer_emergency_facilities" checked onchange="VajraMap.toggleOverlayGroup('layer_emergency_facilities', this.checked)">
                 </label>
                 <label class="layer-checkbox-item">
-                  <span>🛡️ Evacuation Routes & Safe Zones</span>
+                  <span class="layer-item-label">
+                    <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                    Evacuation Routes & Safe Zones
+                  </span>
                   <input type="checkbox" id="layer_routes" checked onchange="VajraMap.toggleOverlayGroup('layer_routes', this.checked)">
                 </label>
               </div>
@@ -381,7 +418,9 @@
             </div>
             <div class="live-weather-body">
               <div class="weather-temp-box">
-                <span class="weather-temp-icon" id="weather-icon">🌧️</span>
+                <span class="weather-temp-icon" id="weather-icon">
+                  <svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>
+                </span>
                 <div>
                   <div class="weather-temp-val" id="weather-temp">6.3°C</div>
                   <div class="weather-condition" id="weather-cond">Light Rain</div>
@@ -444,8 +483,9 @@
           <!-- Multi-Source Data Provenance Cards (SIH 2026 Theme Requirement - Step 5) -->
           <div class="provenance-container">
             <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.35rem;">
-              <h4 style="font-size: 0.72rem; color: #0f172a; text-transform: uppercase; font-weight: 800; display: flex; align-items: center; gap: 4px; margin: 0;">
-                <span>🛰️ MULTI-SOURCE DATA PROVENANCE</span>
+              <h4 style="font-size: 0.72rem; color: #0f172a; text-transform: uppercase; font-weight: 800; display: flex; align-items: center; gap: 6px; margin: 0;">
+                <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>
+                <span>MULTI-SOURCE DATA PROVENANCE</span>
               </h4>
               <span style="background: #eff6ff; color: #1e40af; font-size: 0.6rem; padding: 1px 5px; border-radius: 3px; font-weight: 800; border: 1px solid #bfdbfe;">4 FEEDS INTEGRATED</span>
             </div>
@@ -544,7 +584,7 @@
         </div>
 
         <div class="search-filter-box">
-          <input type="text" class="search-input" id="search-input" placeholder="🔍 Search ANY city/district in India (e.g. Wayanad, Shimla)..." oninput="VajraAnalyze.handleSearch(this.value)">
+          <input type="text" class="search-input" id="search-input" placeholder="Search ANY city/district in India (e.g. Wayanad, Shimla)..." oninput="VajraAnalyze.handleSearch(this.value)">
 
           <select class="filter-select" id="coverage-filter-select" onchange="VajraAnalyze.handleCoverageFilter(this.value)">
             <option value="ALL">All Coverage Types</option>
@@ -693,7 +733,9 @@
           <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
           <span>SECURED AUTHORIZED LOGIN</span>
         </h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('login-modal')">✖</button>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('login-modal')" aria-label="Close">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
       <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.78rem; color: #1e40af;">
@@ -718,17 +760,24 @@
 
   <!-- Official CAP Alert Transmission Modal -->
   <div class="modal-overlay" id="dispatch-modal">
-    <div class="modal-card" style="width: 580px;">
-      <div class="modal-header">
-        <h3 style="color: var(--risk-red);" id="dispatch-modal-title">Confirm Emergency Broadcast Transmission</h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('dispatch-modal')">✖</button>
+    <div class="modal-card" style="width: 520px; max-width: 92vw;">
+      <div class="modal-header" style="margin-bottom: 0.9rem;">
+        <h3 style="color: var(--risk-red); font-size: 1.05rem;" id="dispatch-modal-title">Confirm Emergency Broadcast Transmission</h3>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('dispatch-modal')" aria-label="Close">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
 
-      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1rem; margin-bottom: 1rem;">
-        <div style="font-weight: 800; color: #991b1b; font-size: 0.9rem; margin-bottom: 0.4rem;">
-          Emergency Cell Broadcast Summary
+      <div style="background: #fef2f2; border: 1px solid #fca5a5; border-radius: 10px; padding: 1.15rem; margin-bottom: 1.25rem;">
+        <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem;">
+          <div style="font-weight: 800; color: #991b1b; font-size: 0.95rem;">
+            Emergency Cell Broadcast Summary
+          </div>
+          <span style="font-size: 0.68rem; font-weight: 700; color: #991b1b; background: rgba(220, 38, 38, 0.08); padding: 2px 7px; border-radius: 4px; border: 1px solid #fca5a5;">
+            C-DOT CBE • ITU-T CAP v1.2
+          </span>
         </div>
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.5rem; font-size: 0.78rem; color: #374151;">
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem 1rem; font-size: 0.82rem; color: #374151;">
           <div>Target Sector: <strong id="dispatch-modal-region">Bhatwari, Uttarkashi</strong></div>
           <div>Risk Level: <strong id="dispatch-modal-risk" style="color: var(--risk-red);">94% [Extreme]</strong></div>
           <div>Rainfall: <strong id="dispatch-modal-rain">24h: 142mm | 72h: 184mm</strong></div>
@@ -740,20 +789,11 @@
         </div>
       </div>
 
-      <!-- Transmission Protocol Notice -->
-      <div style="background: #f8fafc; border: 1px solid #cbd5e1; border-radius: 10px; padding: 0.85rem; margin-bottom: 1.25rem; font-size: 0.78rem; color: #475569; line-height: 1.45;">
-        <strong style="color: #0f172a;">How Cell Broadcast Alert Transmission Operates Legally & Technically:</strong><br/>
-        • <strong>ITU X.1303 CAP Protocol</strong>: VAJRA packages alerts into standard Common Alerting Protocol (CAP XML).<br/>
-        • <strong>C-DOT Cell Broadcast Entity (CBE)</strong>: Directly dispatches signed CAP alerts to NDMA's national <em>Sachet</em> engine.<br/>
-        • <strong>Carrier-Grade Overrides</strong>: Telecom Operators (Jio, Airtel, BSNL) push non-blockable broadcast tones to cell towers in the target geofence without requiring individual app installs.<br/>
-        • <strong>Satellite VHF Sirens</strong>: Functions over satellite radio links even when mobile cell towers collapse.
-      </div>
-
       <div style="display: flex; gap: 0.75rem;">
-        <button class="btn-danger-action" style="flex: 1; justify-content: center;" onclick="VajraAlerts.confirmEmergencyBroadcast()">
+        <button class="btn-danger-action" style="flex: 1.35; justify-content: center; padding: 0.75rem 1rem; font-size: 0.85rem;" onclick="VajraAlerts.confirmEmergencyBroadcast()">
           Transmit CAP Emergency Broadcast
         </button>
-        <button class="btn-secondary-action" onclick="VajraAlerts.openCapProtocolDetailsModal()">
+        <button class="btn-secondary-action" style="padding: 0.75rem 1rem; font-size: 0.82rem;" onclick="VajraAlerts.openCapProtocolDetailsModal()">
           View Protocol Details
         </button>
       </div>
@@ -765,7 +805,9 @@
     <div class="modal-card" style="width: 580px;">
       <div class="modal-header">
         <h3 style="color: #1e3a8a;">Government Cell Broadcast & CAP Protocol Integration</h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('cap-protocol-modal')">✖</button>
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('cap-protocol-modal')" aria-label="Close">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
       </div>
       <div style="font-size: 0.82rem; color: #334155; line-height: 1.5; display: flex; flex-direction: column; gap: 0.75rem;">
         <p>

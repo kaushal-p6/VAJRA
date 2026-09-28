@@ -65,7 +65,7 @@ function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
         source: "IMD AWS & NASA GPM IMERG",
         badge: "METEO",
         value: triggerText,
-        icon: "🌧️",
+        icon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>`,
         severity: "Very High",
         color: "#2563eb"
       };
@@ -75,7 +75,7 @@ function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
         source: "ISRO CartoDEM / Copernicus 30m",
         badge: "DEM",
         value: triggerText,
-        icon: "🏔️",
+        icon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>`,
         severity: "Critical Slope",
         color: "#d97706"
       };
@@ -85,7 +85,7 @@ function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
         source: "Copernicus Sentinel-1 C-SAR & SMAP",
         badge: "SAR RADAR",
         value: triggerText,
-        icon: "🛰️",
+        icon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>`,
         severity: "Near Saturation",
         color: "#ea580c"
       };
@@ -95,7 +95,7 @@ function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
       source: "Multi-Source Sensor Stream",
       badge: "SENSOR",
       value: triggerText,
-      icon: "📡",
+      icon: `<svg class="icon-svg" viewBox="0 0 24 24"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>`,
       severity: "Alert",
       color: "#64748b"
     };

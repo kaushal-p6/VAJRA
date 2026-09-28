@@ -413,12 +413,12 @@ const VajraMap = {
     const dangerEl = document.createElement('div');
     dangerEl.className = 'danger-origin-pin';
     dangerEl.title = `Hazard Danger Center — ${targetRegion.village}`;
-    dangerEl.innerHTML = '⚠️';
+    dangerEl.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
     const dangerMarker3D = new maplibregl.Marker({ element: dangerEl })
       .setLngLat([startPt[1], startPt[0]])
       .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`
         <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:4px;">
-          <strong style="color:#dc2626;">⚠️ Hazard Center — ${targetRegion.village}</strong><br/>
+          <strong style="color:#dc2626;display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#dc2626" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Hazard Center — ${targetRegion.village}</strong><br/>
           Risk Score: <strong>${Math.round((targetRegion.risk_score || 0) * 100)}%</strong> [${targetRegion.risk_tier}]<br/>
           Impact Window: <strong>${targetRegion.expected_time_to_impact_hours != null ? targetRegion.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
         </div>
@@ -441,18 +441,18 @@ const VajraMap = {
       .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
         <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="font-size:1.3rem;">🛡️</span>
+            <span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#16a34a" stroke="#ffffff" stroke-width="1.8"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg></span>
             <div>
               <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
               <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
             </div>
           </div>
           <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-            <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'Unknown'}</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
-            ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
-            <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
-            <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
-            <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
+            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'Unknown'}</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+            ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
+            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 3l9 7H3z"/></svg>Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
+            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
+            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
           </div>
         </div>
       `))
@@ -463,7 +463,7 @@ const VajraMap = {
     const labelEl = document.createElement('div');
     labelEl.className = 'safe-zone-tooltip';
     labelEl.style.transform = 'translateY(-16px)';
-    labelEl.innerHTML = `🛡️ ${primaryDest.name} · ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'distance unknown'}${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}`;
+    labelEl.innerHTML = `<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${primaryDest.name} · ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'distance unknown'}${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}</span>`;
     const labelMarker3D = new maplibregl.Marker({ element: labelEl })
       .setLngLat([destPt[1], destPt[0]])
       .addTo(this.maplibreInstance);
@@ -473,8 +473,8 @@ const VajraMap = {
     const badgeEl = document.createElement('div');
     badgeEl.className = 'route-badge';
     badgeEl.innerHTML = `
-      <span class="badge-dist">📍 ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
-      <span class="badge-time">🚶 ${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev">⛰ +${primaryDest.relative_safe_height_m}m safe</span>` : ''}
+      <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
+      <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>+${primaryDest.relative_safe_height_m}m safe</span>` : ''}
     `;
     const badgeMarker3D = new maplibregl.Marker({ element: badgeEl })
       .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
@@ -626,7 +626,7 @@ const VajraMap = {
 
         evtMarker.bindTooltip(`
           <div style="font-family: Inter, sans-serif; font-size: 0.8rem; color: #0f172a;">
-            <strong style="color: #7c3aed;">📜 Historical Event (${evt.date})</strong><br/>
+            <strong style="color: #7c3aed; display:inline-flex; align-items:center; gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#7c3aed" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>Historical Event (${evt.date})</strong><br/>
             ${evt.location} (${evt.district})<br/>
             Hazard: <strong>${evt.hazard_type}</strong><br/>
             Severity: <strong>${evt.severity}</strong> | Rain: <strong>${evt.rainfall_around_event_24h}</strong><br/>
@@ -664,7 +664,7 @@ const VajraMap = {
 
         infraMarker.bindTooltip(`
           <div style="font-family: Inter, sans-serif; font-size: 0.8rem;">
-            <strong>${isHosp ? '🏥 Hospital' : '🚒 Emergency Post'}</strong><br/>
+            <strong>${isHosp ? '<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>Hospital</span>' : '<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/></svg>Emergency Post</span>'}</strong><br/>
             ${infra.name}<br/>
             Helpline: <strong>${infra.emergency_phone}</strong>
           </div>
@@ -686,7 +686,7 @@ const VajraMap = {
           dashArray: "1 8",
           lineCap: "round"
         });
-        riverLine.bindTooltip(`🏞 ${river.name}`, { sticky: true });
+        riverLine.bindTooltip(`<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#0284c7" stroke-width="2"><path d="M2 6c.6.5 1.2 1 2.5 1C7 7 7 5 9.5 5c2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 12c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/><path d="M2 18c.6.5 1.2 1 2.5 1 2.5 0 2.5-2 5-2 2.6 0 2.4 2 5 2 2.5 0 2.5-2 5-2 1.3 0 1.9.5 2.5 1"/></svg>${river.name}</span>`, { sticky: true });
         this.overlayLayers.rivers.addLayer(riverLine);
       });
     }
@@ -834,14 +834,14 @@ const VajraMap = {
     // ─────────────────────────────────────────────────────────────
     const dangerIcon = L.divIcon({
       className: '',
-      html: `<div class="danger-origin-pin" title="Hazard Danger Center">⚠️</div>`,
+      html: `<div class="danger-origin-pin" title="Hazard Danger Center"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg></div>`,
       iconSize: [32, 32],
       iconAnchor: [16, 16]
     });
     const dangerMarker = L.marker(startPt, { icon: dangerIcon, zIndexOffset: 950 });
     dangerMarker.bindTooltip(`
       <div style="font-family:Inter,sans-serif;font-size:0.82rem;color:#0f172a;min-width:180px;">
-        <strong style="color:#dc2626;">⚠️ Hazard Center — ${region.village}</strong><br/>
+        <strong style="color:#dc2626;display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#dc2626" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>Hazard Center — ${region.village}</strong><br/>
         Risk Score: <strong>${Math.round((region.risk_score || 0) * 100)}%</strong> [${region.risk_tier} Tier]<br/>
         Hazard: <strong>${region.hazard_type || 'Landslide / Flash Flood'}</strong><br/>
         Impact Window: <strong>${region.expected_time_to_impact_hours != null ? region.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
@@ -871,7 +871,7 @@ const VajraMap = {
     });
     evacuationRoute.bindTooltip(`
       <div style="font-family:Inter,sans-serif;font-size:0.8rem;color:#0f172a;">
-        <strong>🚶 Safe Evacuation Walking Corridor</strong><br/>
+        <strong style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>Safe Evacuation Walking Corridor</strong><br/>
         Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} min walk)` : ''}<br/>
         ${primaryDest.relative_safe_height_m != null ? `Elevation Gain: <strong>+${primaryDest.relative_safe_height_m}m</strong> upward safe gradient` : ''}
       </div>
@@ -887,7 +887,7 @@ const VajraMap = {
       className: '',
       html: `
         <div class="route-badge">
-          <span class="badge-dist">📍 ${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time">🚶 ~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev">⛰ Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
+          <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
         </div>`,
       iconSize: [250, 34],
       iconAnchor: [125, 17]
@@ -912,7 +912,7 @@ const VajraMap = {
     const shieldMarker = L.marker(destPt, { icon: shieldIcon, zIndexOffset: 1200 });
 
     shieldMarker.bindTooltip(
-      `🛡️ ${primaryDest.name} · ${primaryDest.distance_km} km${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}`,
+      `<span style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>${primaryDest.name} · ${primaryDest.distance_km} km${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}</span>`,
       { permanent: true, direction: 'top', className: 'safe-zone-tooltip', offset: [0, -22] }
     );
 
@@ -921,18 +921,18 @@ const VajraMap = {
     shieldMarker.bindPopup(`
       <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-          <span style="font-size:1.3rem;">🛡️</span>
+          <span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#16a34a" stroke="#ffffff" stroke-width="1.8"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg></span>
           <div>
             <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
             <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
           </div>
         </div>
         <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-          <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
-          ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
-          <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
-          <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
-          <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
+          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+          ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
+          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 3l9 7H3z"/></svg>Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
+          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
+          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
         </div>
       </div>
     `, { offset: [0, -15] });
@@ -954,14 +954,14 @@ const VajraMap = {
 
       const ridgeIcon = L.divIcon({
         className: '',
-        html: `<div style="background:#065f46;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1.5px solid #34d399;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;gap:3px;cursor:pointer;"><span>⛰️</span><span>${highGround.name.split(' ')[0]} Ridge (+${highGround.relative_safe_height_m}m)</span></div>`,
+        html: `<div style="background:#065f46;color:#fff;padding:2px 6px;border-radius:4px;font-size:10px;font-weight:700;border:1.5px solid #34d399;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.4);display:flex;align-items:center;gap:3px;cursor:pointer;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg><span>${highGround.name.split(' ')[0]} Ridge (+${highGround.relative_safe_height_m}m)</span></div>`,
         iconSize: [120, 24],
         iconAnchor: [60, 12]
       });
       const ridgeMarker = L.marker(ridgePt, { icon: ridgeIcon, zIndexOffset: 1000 });
       ridgeMarker.bindTooltip(`
         <div style="font-family:Inter,sans-serif;font-size:0.8rem;color:#0f172a;">
-          <strong>⛰️ Candidate Safe Ridge Crest</strong><br/>
+          <strong style="display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Candidate Safe Ridge Crest</strong><br/>
           ${highGround.name}<br/>
           Elevation: <strong>${highGround.elevation_m}m</strong> (+${highGround.relative_safe_height_m}m above danger level)<br/>
           Distance: <strong>${highGround.distance_km} km</strong> (~${highGround.est_walk_minutes} mins walk)<br/>
@@ -1005,7 +1005,11 @@ const VajraMap = {
       const iconEl = document.getElementById("weather-icon");
       if (iconEl) {
         const main = (data.main || "").toLowerCase();
-        iconEl.textContent = main.includes("rain") ? "🌧️" : main.includes("cloud") ? "☁️" : main.includes("clear") ? "☀️" : "🌫️";
+        const rainSvg = `<svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg>`;
+        const cloudSvg = `<svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/></svg>`;
+        const sunSvg = `<svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>`;
+        const mistSvg = `<svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2"><line x1="4" y1="8" x2="20" y2="8"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="16" x2="20" y2="16"/></svg>`;
+        iconEl.innerHTML = main.includes("rain") ? rainSvg : main.includes("cloud") ? cloudSvg : main.includes("clear") ? sunSvg : mistSvg;
       }
     };
 
@@ -1131,42 +1135,42 @@ const VajraMap = {
       provContainer.innerHTML = `
         <div class="provenance-card">
           <div class="provenance-card-header">
-            <span class="prov-icon">🌧️</span>
+            <span class="prov-icon"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M17.5 19H9a7 7 0 1 1 6.71-9h1.79a4.5 4.5 0 1 1 0 9Z"/><line x1="8" y1="19" x2="8" y2="21"/><line x1="12" y1="19" x2="12" y2="21"/><line x1="16" y1="19" x2="16" y2="21"/></svg></span>
             <span class="prov-badge prov-badge-meteo">METEO</span>
           </div>
           <div class="prov-val">${rainVal} mm Rain</div>
           <div class="prov-trigger">Dual-polarization radar & gauge calibration exceeds 72h flash threshold</div>
-          <div class="prov-agency">📡 IMD AWS & NASA GPM IMERG</div>
+          <div class="prov-agency" style="display:flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M4.9 19.1C1 15.2 1 8.8 4.9 4.9"/><path d="M7.8 16.2c-2.3-2.3-2.3-6.1 0-8.5"/><circle cx="12" cy="12" r="2"/><path d="M16.2 7.8c2.3 2.3 2.3 6.1 0 8.5"/><path d="M19.1 4.9C23 8.8 23 15.1 19.1 19"/></svg>IMD AWS & NASA GPM IMERG</div>
         </div>
 
         <div class="provenance-card">
           <div class="provenance-card-header">
-            <span class="prov-icon">🏔️</span>
+            <span class="prov-icon"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg></span>
             <span class="prov-badge prov-badge-dem">DEM</span>
           </div>
           <div class="prov-val">${slopeVal}° Steep Slope</div>
           <div class="prov-trigger">High-resolution elevation DEM critical gravitational shear angle</div>
-          <div class="prov-agency">🛰️ ISRO CartoDEM & Copernicus 30m</div>
+          <div class="prov-agency" style="display:flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>ISRO CartoDEM & Copernicus 30m</div>
         </div>
 
         <div class="provenance-card">
           <div class="provenance-card-header">
-            <span class="prov-icon">🛰️</span>
+            <span class="prov-icon"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg></span>
             <span class="prov-badge prov-badge-sar">SAR RADAR</span>
           </div>
           <div class="prov-val">${soilMoist}% Saturation</div>
           <div class="prov-trigger">Synthetic aperture radar topsoil dielectric permittivity index</div>
-          <div class="prov-agency">🛰️ Copernicus Sentinel-1 C-SAR & SMAP</div>
+          <div class="prov-agency" style="display:flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><path d="M13 7 9 3 5 7l4 4"/><path d="m17 11 4 4-4 4-4-4"/><path d="m8 12 4 4 6-6-4-4Z"/><path d="m16 8 3-3"/><path d="M9 21a6 6 0 0 0-6-6"/></svg>Copernicus Sentinel-1 C-SAR & SMAP</div>
         </div>
 
         <div class="provenance-card">
           <div class="provenance-card-header">
-            <span class="prov-icon">🧪</span>
+            <span class="prov-icon"><svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 2v7.31L4.69 19.46A2 2 0 0 0 6.4 22h11.2a2 2 0 0 0 1.71-2.54L14 9.31V2"/><line x1="8.5" y1="2" x2="15.5" y2="2"/><line x1="8" y1="14" x2="16" y2="14"/></svg></span>
             <span class="prov-badge prov-badge-soil">PEDOLOGY</span>
           </div>
           <div class="prov-val">${soilType.split('(')[0].trim()}</div>
           <div class="prov-trigger">High-runoff shallow stony cambisols with low percolation</div>
-          <div class="prov-agency">🌐 ISRIC World SoilGrids v2.0</div>
+          <div class="prov-agency" style="display:flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg>ISRIC World SoilGrids v2.0</div>
         </div>
       `;
     }
