@@ -82,11 +82,17 @@
         </div>
       </div>
 
-      <!-- Simple Login Button -->
-      <button class="simple-login-btn" id="auth-login-btn" onclick="VajraUI.openLoginModal()">
-        <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-        <span>LOGIN</span>
-      </button>
+      <!-- Minimal User Session & Logout -->
+      <div class="user-session-bar" id="user-session-bar">
+        <div class="user-dept-badge" id="user-dept-badge" title="Active Disaster Authority Session" style="display: none;">
+          <span class="user-status-dot"></span>
+          <span class="user-dept-tag" id="user-dept-tag">NDRF-HQ-01</span>
+        </div>
+        <button class="minimal-logout-btn" id="auth-logout-btn" onclick="VajraAuth.logout()" title="Sign Out of VAJRA">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
   </header>
 
@@ -698,40 +704,313 @@
        MODALS & DIALOGS
        ========================================================================== -->
 
-  <!-- Secured Department Login Modal -->
-  <div class="modal-overlay" id="login-modal">
-    <div class="modal-card">
-      <div class="modal-header">
-        <h3 style="color: #1e3a8a; display: flex; align-items: center; gap: 0.4rem;">
-          <svg class="icon-svg" viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-          <span>SECURED AUTHORIZED LOGIN</span>
-        </h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('login-modal')" aria-label="Close">
-          <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  <!-- Fullscreen Secured Login Portal (Dashboard hidden until authenticated or explored) -->
+  <div class="auth-fullscreen-portal" id="vajra-login-screen">
+    <div class="auth-login-card">
+      <div class="auth-brand-center">
+        <img src="assets/vajra-banner-logo.png" alt="VAJRA - Flash Flood Prediction System" class="auth-full-logo-img">
+      </div>
+
+      <form id="vajra-login-form" onsubmit="VajraUI.handleLoginSubmit(event)" novalidate>
+        <div class="form-group">
+          <label for="login-dept-id">Official ID / Email</label>
+          <input type="text" class="form-control" id="login-dept-id" placeholder="e.g. NDRF-HQ-01 or officer@gov.in" required autocomplete="username">
+          <div class="form-field-error" id="login-id-error"></div>
+        </div>
+
+        <div class="form-group">
+          <label for="login-password">Password</label>
+          <input type="password" class="form-control" id="login-password" placeholder="Enter password" required minlength="8" autocomplete="current-password">
+          <div class="form-field-error" id="login-password-error"></div>
+        </div>
+
+        <button type="submit" class="btn-primary-block" id="btn-login-submit">
+          <span>Sign In</span>
+        </button>
+
+        <div class="auth-divider">
+          <span>OR</span>
+        </div>
+
+        <button type="button" class="btn-explore-vajra" id="btn-explore-vajra" onclick="VajraAuth.exploreVajra()">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          <span>Explore VAJRA</span>
+        </button>
+        <div class="explore-supporting-text">No credentials required for judges.</div>
+
+        <div class="auth-register-link-box">
+          <button type="button" class="link-btn-register" onclick="VajraRegistration.open()">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><line x1="20" y1="8" x2="20" y2="14"/><line x1="23" y1="11" x2="17" y2="11"/></svg>
+            <span>Request Authorized Access</span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Request Authorized Access Registration Modal -->
+  <div class="modal-overlay" id="registration-modal">
+    <div class="modal-card auth-registration-card">
+      <div class="modal-header auth-reg-header">
+        <div>
+          <h3 class="auth-reg-title">Request Authorized Access</h3>
+          <p class="auth-reg-subtitle">Submit your official details for verification and access approval.</p>
+        </div>
+        <button class="modal-close-btn" onclick="VajraRegistration.close()" aria-label="Close" title="Close Registration">
+          <svg class="icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
 
-      <div style="display: flex; justify-content: center; margin-bottom: 0.9rem;">
-        <img src="assets/vajra-crest.jpg" alt="VAJRA Crest" style="width: 76px; height: 76px; border-radius: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.18); object-fit: cover; border: 2px solid #e2e8f0;">
+      <div class="auth-reg-notice">
+        <strong style="color: #1e3a8a;">VAJRA</strong> · FLASH FLOOD PREDICTION SYSTEM<br/>
+        <span>VAJRA access is intended for authorized personnel involved in disaster monitoring, emergency response, administration and analysis.</span>
       </div>
 
-      <div style="background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px; padding: 0.75rem; margin-bottom: 1rem; font-size: 0.78rem; color: #1e40af;">
-        Encrypted TLS 1.3 Channel • Pre-authorized Department Credentials Loaded
-      </div>
-
-      <form onsubmit="VajraUI.handleLoginSubmit(event)">
-        <div class="form-group">
-          <label>Department ID</label>
-          <input type="text" class="form-control" id="login-dept-id" value="NDRF-HQ-01" required>
+      <form id="vajra-registration-form" onsubmit="VajraRegistration.handleSubmit(event)" novalidate>
+        <!-- SECTION A — PERSONAL INFORMATION -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <span class="reg-section-num">A</span>
+            <span>Personal Information</span>
+          </div>
+          <div class="reg-grid-3">
+            <div class="form-group">
+              <label for="reg-fullname">Full Name <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-fullname" placeholder="e.g. Ramesh Rawat">
+              <div class="form-field-error" id="err-reg-fullname"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-email">Official Email Address <span class="req-star">*</span></label>
+              <input type="email" class="form-control" id="reg-email" placeholder="e.g. ramesh.rawat@gov.in">
+              <div class="form-field-error" id="err-reg-email"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-mobile">Mobile Number <span class="req-star">*</span></label>
+              <input type="tel" class="form-control" id="reg-mobile" placeholder="10-digit mobile number" maxlength="10">
+              <div class="form-field-error" id="err-reg-mobile"></div>
+            </div>
+          </div>
         </div>
 
-        <div class="form-group">
-          <label>Password</label>
-          <input type="password" class="form-control" id="login-password" value="password123" required>
+        <!-- SECTION B — ORGANIZATION & SERVICE INFORMATION -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <span class="reg-section-num">B</span>
+            <span>Organization & Service Information</span>
+          </div>
+          <div class="reg-grid-3">
+            <div class="form-group">
+              <label for="reg-org">Organization / Department <span class="req-star">*</span></label>
+              <select class="form-control" id="reg-org">
+                <option value="" disabled selected>Select Organization / Department</option>
+                <option value="State Disaster Management Authority">State Disaster Management Authority</option>
+                <option value="District Disaster Management Authority">District Disaster Management Authority</option>
+                <option value="NDRF">NDRF</option>
+                <option value="SDRF">SDRF</option>
+                <option value="Civil Defence">Civil Defence</option>
+                <option value="Police / Emergency Services">Police / Emergency Services</option>
+                <option value="District Administration">District Administration</option>
+                <option value="Fire & Emergency Services">Fire & Emergency Services</option>
+                <option value="Other Authorized Agency">Other Authorized Agency</option>
+              </select>
+              <div class="form-field-error" id="err-reg-org"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-designation">Designation <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-designation" placeholder="e.g. Assistant Commandant / DDO">
+              <div class="form-field-error" id="err-reg-designation"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-empid">Employee / Service ID <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-empid" placeholder="e.g. NDRF-UK-7412">
+              <div class="form-field-error" id="err-reg-empid"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-state">State <span class="req-star">*</span></label>
+              <select class="form-control" id="reg-state">
+                <option value="" disabled selected>Select State / Union Territory</option>
+                <option value="Uttarakhand">Uttarakhand</option>
+                <option value="Himachal Pradesh">Himachal Pradesh</option>
+                <option value="Jammu & Kashmir">Jammu & Kashmir</option>
+                <option value="Kerala">Kerala</option>
+                <option value="Sikkim">Sikkim</option>
+                <option value="Assam">Assam</option>
+                <option value="Arunachal Pradesh">Arunachal Pradesh</option>
+                <option value="Meghalaya">Meghalaya</option>
+                <option value="Nagaland">Nagaland</option>
+                <option value="Manipur">Manipur</option>
+                <option value="Mizoram">Mizoram</option>
+                <option value="Tripura">Tripura</option>
+                <option value="West Bengal">West Bengal</option>
+                <option value="Maharashtra">Maharashtra</option>
+                <option value="Tamil Nadu">Tamil Nadu</option>
+                <option value="Karnataka">Karnataka</option>
+                <option value="Andhra Pradesh">Andhra Pradesh</option>
+                <option value="Odisha">Odisha</option>
+                <option value="Delhi">Delhi / National Capital Region</option>
+                <option value="Other">Other State / UT</option>
+              </select>
+              <div class="form-field-error" id="err-reg-state"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-district">District <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-district" placeholder="e.g. Uttarkashi / Wayanad / Kangra">
+              <div class="form-field-error" id="err-reg-district"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-office">Office / Unit Name <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-office" placeholder="e.g. Emergency Operation Centre / 8th Bn Base">
+              <div class="form-field-error" id="err-reg-office"></div>
+            </div>
+          </div>
         </div>
 
-        <button type="submit" class="btn-primary-block">LOGIN</button>
+        <!-- SECTION C — ACCESS REQUEST -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <span class="reg-section-num">C</span>
+            <span>Access Request</span>
+          </div>
+          <div class="reg-grid-2">
+            <div class="form-group">
+              <label for="reg-role">Requested Role <span class="req-star">*</span></label>
+              <select class="form-control" id="reg-role">
+                <option value="" disabled selected>Select Requested Role</option>
+                <option value="State Authority">State Authority</option>
+                <option value="District Authority">District Authority</option>
+                <option value="Field Officer">Field Officer</option>
+                <option value="Emergency Responder">Emergency Responder</option>
+                <option value="Analyst / Researcher">Analyst / Researcher</option>
+                <option value="Other">Other</option>
+              </select>
+              <div class="form-field-error" id="err-reg-role"></div>
+            </div>
+            <div class="form-group">
+              <label for="reg-jurisdiction">Area / Jurisdiction <span class="req-star">*</span></label>
+              <input type="text" class="form-control" id="reg-jurisdiction" placeholder="e.g. Uttarkashi District & Upper Bhagirathi Basin">
+              <div class="form-field-error" id="err-reg-jurisdiction"></div>
+            </div>
+          </div>
+          <div class="form-group" style="margin-bottom: 0;">
+            <label for="reg-reason">Reason for requesting VAJRA access <span class="req-star">*</span></label>
+            <textarea class="form-control" id="reg-reason" rows="3" placeholder="Briefly explain your official responsibility and why access to VAJRA is required."></textarea>
+            <div class="form-field-error" id="err-reg-reason"></div>
+          </div>
+        </div>
+
+        <!-- SECTION D — AUTHORIZATION DOCUMENT -->
+        <div class="reg-section">
+          <div class="reg-section-title">
+            <span class="reg-section-num">D</span>
+            <span>Authorization Document</span>
+          </div>
+          <p class="reg-doc-desc">Upload an official authorization or service document for verification. (Accepted: PDF, JPG, PNG • Max size: 5 MB)</p>
+          <div class="file-upload-dropzone" id="file-dropzone" onclick="document.getElementById('reg-doc-input').click()">
+            <input type="file" id="reg-doc-input" accept=".pdf,.jpg,.jpeg,.png" style="display: none;" onchange="VajraRegistration.handleFileChange(event)">
+            <div id="dropzone-content-empty">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="30" height="30" stroke="#2563eb" fill="none" stroke-width="1.8"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+              <div style="font-size: 0.85rem; font-weight: 700; color: #1e293b; margin-top: 6px;">Click or drag & drop official document here</div>
+              <div style="font-size: 0.72rem; color: #64748b;">Official ID Card, Appointment Letter, or Authority Requisition (PDF, JPG, PNG up to 5MB)</div>
+            </div>
+            <div id="dropzone-content-selected" style="display: none;">
+              <div style="display: flex; align-items: center; justify-content: center; gap: 8px;">
+                <svg class="icon-svg" viewBox="0 0 24 24" width="22" height="22" stroke="#16a34a" fill="none" stroke-width="2.2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+                <span id="selected-file-name" style="font-weight: 700; font-size: 0.86rem; color: #0f172a;"></span>
+                <span id="selected-file-size" style="font-size: 0.75rem; color: #64748b;"></span>
+                <button type="button" class="btn-remove-file" onclick="VajraRegistration.removeFile(event)" title="Remove file">✕</button>
+              </div>
+            </div>
+          </div>
+          <div class="form-field-error" id="err-reg-doc"></div>
+          <div class="reg-doc-footer-note">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+            <span>Document will be reviewed by the designated authority.</span>
+          </div>
+        </div>
+
+        <!-- DECLARATION & CONSENT -->
+        <div class="reg-declaration-box">
+          <label class="declaration-checkbox-label">
+            <input type="checkbox" id="reg-consent">
+            <span>I confirm that the information provided above is accurate and that I am requesting access for authorized official purposes. <span class="req-star">*</span></span>
+          </label>
+          <div class="form-field-error" id="err-reg-consent"></div>
+          <p class="declaration-subtext">Submitting this form does not grant immediate access to VAJRA. Access will be activated only after authorization review.</p>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="reg-action-buttons">
+          <button type="submit" class="btn-primary-block" style="padding: 0.75rem 1.2rem; font-size: 0.92rem; flex: 1;">
+            Submit Access Request
+          </button>
+          <button type="button" class="btn-secondary-action" onclick="VajraRegistration.backToLogin()" style="padding: 0.75rem 1.2rem; font-size: 0.88rem;">
+            Back to Login
+          </button>
+        </div>
       </form>
+    </div>
+  </div>
+
+  <!-- Registration Success Modal -->
+  <div class="modal-overlay" id="reg-success-modal">
+    <div class="modal-card auth-success-card">
+      <div class="success-icon-badge">
+        <svg class="icon-svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          <polyline points="9 12 11 14 15 10"/>
+        </svg>
+      </div>
+
+      <h3 class="success-modal-title">Access Request Submitted</h3>
+      <p class="success-modal-msg">Your request has been sent for authorization review.</p>
+
+      <div class="success-req-details">
+        <div class="success-req-row">
+          <span class="req-label">Request ID:</span>
+          <strong class="req-id-code" id="success-display-req-id">VAJRA-REQ-482731</strong>
+        </div>
+        <div class="success-req-row">
+          <span class="req-label">Status:</span>
+          <span class="req-status-badge">● PENDING AUTHORITY REVIEW</span>
+        </div>
+      </div>
+
+      <!-- Stepper Indicator -->
+      <div class="req-stepper-container">
+        <div class="stepper-step step-done">
+          <div class="step-circle">✓</div>
+          <div class="step-text">SUBMITTED</div>
+        </div>
+        <div class="stepper-line active"></div>
+        <div class="stepper-step step-active">
+          <div class="step-circle">●</div>
+          <div class="step-text">PENDING REVIEW</div>
+        </div>
+        <div class="stepper-line"></div>
+        <div class="stepper-step step-future">
+          <div class="step-circle">3</div>
+          <div class="step-text">AUTHORITY APPROVAL</div>
+        </div>
+        <div class="stepper-line"></div>
+        <div class="stepper-step step-future">
+          <div class="step-circle">4</div>
+          <div class="step-text">ACCOUNT ACTIVATION</div>
+        </div>
+      </div>
+
+      <div class="success-modal-notice">
+        <p style="margin: 0;">Your request has been recorded in this prototype and is marked as <strong>Pending Authority Review</strong>.</p>
+        <p style="margin: 4px 0 0; font-size: 0.72rem; color: #64748b;">Your submitted details will require verification by the designated authority before VAJRA access can be activated.</p>
+      </div>
+
+      <div class="success-modal-actions">
+        <button type="button" class="btn-primary-block" onclick="VajraRegistration.finishAndBackToLogin()">
+          Back to Login
+        </button>
+        <button type="button" class="btn-secondary-action" onclick="VajraUI.closeModal('reg-success-modal')" style="width: 100%; justify-content: center; margin-top: 0.4rem;">
+          Close
+        </button>
+      </div>
     </div>
   </div>
 
@@ -817,6 +1096,7 @@
   <script src="js/data.js"></script>
   <script src="js/clock.js"></script>
   <script src="js/auth.js"></script>
+  <script src="js/registration.js"></script>
   <script src="js/map.js"></script>
   <script src="js/alerts.js"></script>
   <script src="js/analyze.js"></script>

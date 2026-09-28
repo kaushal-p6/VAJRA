@@ -36,6 +36,15 @@ const VajraUI = {
         notifDropdown.classList.remove("show");
       }
     });
+
+    // 7. Initial Access Control Check:
+    // If the visitor has not entered in this session, keep login screen active (concealing dashboard)
+    const loginScreen = document.getElementById("vajra-login-screen");
+    if (!sessionStorage.getItem("vajra_entered")) {
+      if (loginScreen) loginScreen.classList.remove("hidden");
+    } else {
+      if (loginScreen) loginScreen.classList.add("hidden");
+    }
   },
 
   switchTab(tabName) {
@@ -126,20 +135,55 @@ const VajraUI = {
   },
 
   openLoginModal() {
-    this.showModal("login-modal");
+    const loginScreen = document.getElementById("vajra-login-screen");
+    if (loginScreen) loginScreen.classList.remove("hidden");
   },
 
   handleLoginSubmit(e) {
     e.preventDefault();
-    const deptId = document.getElementById("login-dept-id").value;
-    const password = document.getElementById("login-password").value;
+    const deptIdInput = document.getElementById("login-dept-id");
+    const passwordInput = document.getElementById("login-password");
+    const idError = document.getElementById("login-id-error");
+    const passError = document.getElementById("login-password-error");
+
+    if (idError) { idError.textContent = ""; idError.style.display = "none"; }
+    if (passError) { passError.textContent = ""; passError.style.display = "none"; }
+    if (deptIdInput) deptIdInput.classList.remove("is-invalid");
+    if (passwordInput) passwordInput.classList.remove("is-invalid");
+
+    const deptId = (deptIdInput?.value || "").trim();
+    const password = (passwordInput?.value || "").trim();
+
+    let hasError = false;
+    if (!deptId) {
+      if (idError) { idError.textContent = "Please enter your Official ID or Email."; idError.style.display = "block"; }
+      if (deptIdInput) deptIdInput.classList.add("is-invalid");
+      hasError = true;
+    }
+
+    if (!password) {
+      if (passError) { passError.textContent = "Please enter your password."; passError.style.display = "block"; }
+      if (passwordInput) passwordInput.classList.add("is-invalid");
+      hasError = true;
+    } else if (password.length < 8) {
+      if (passError) { passError.textContent = "Password must be at least 8 characters."; passError.style.display = "block"; }
+      if (passwordInput) passwordInput.classList.add("is-invalid");
+      hasError = true;
+    }
+
+    if (hasError) return;
 
     const res = VajraAuth.login(deptId, password);
     if (res.success) {
-      this.closeModal("login-modal");
       this.showToast(res.message, "success");
-      VajraAlerts.updateEmergencyBanner();
+      if (typeof VajraAlerts !== "undefined") {
+        VajraAlerts.updateEmergencyBanner();
+      }
     } else {
+      if (passError) {
+        passError.textContent = res.message;
+        passError.style.display = "block";
+      }
       this.showToast(res.message, "error");
     }
   },
