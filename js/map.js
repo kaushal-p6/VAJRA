@@ -83,6 +83,57 @@ const VajraMap = {
   maplibreInstance: null,
   maplibreMarkers: [],
 
+  // ─────────────────────────────────────────────────────────────
+  // SAFETY FIX: the real ML output schema (see
+  // VAJRA_DevTeam_Report_and_Handoff.md, Part A Section 4) only ever
+  // provides nearest_safe_zone as {name, distance_km} or null — it never
+  // includes lat/lon, capacity, or a contact number. The code that used
+  // to build "primaryDest" in three separate places silently fell back to
+  // a hardcoded Bhatwari coordinate (30.9905, 78.4601), a fabricated
+  // capacity of 800, and a fabricated phone number "+91 1374 222108"
+  // whenever those fields were missing — which is exactly what happens
+  // on every real live alert. For a life-safety evacuation feature,
+  // showing a fake emergency phone number as if real is worse than
+  // showing nothing. This resolver never invents a value: it only uses
+  // curated static reference data (official_government_shelter /
+  // candidate_safe_high_ground, which DO have real lat/lon for the known
+  // pilot villages) when present, and otherwise reports plainly that a
+  // field isn't available.
+  resolveSafeDestination(region) {
+    const mlSafeZone = region.nearest_safe_zone;
+    const govShelter = region.official_government_shelter;
+    const highGround = region.candidate_safe_high_ground;
+
+    // region.nearest_safe_zone === null is a CORRECT, meaningful result
+    // (already-safe terrain, or an isolated road fragment) — not missing
+    // data. Only treat it as "nothing to show" if there's also no static
+    // reference destination for this region.
+    const name = mlSafeZone?.name || govShelter?.name || highGround?.name || null;
+    const distance_km = mlSafeZone?.distance_km ?? govShelter?.distance_km ?? highGround?.distance_km ?? null;
+    if (!name && distance_km == null) return null;
+
+    const coordSource = (govShelter && govShelter.lat != null) ? govShelter
+      : (highGround && highGround.lat != null) ? highGround
+      : (mlSafeZone && mlSafeZone.lat != null) ? mlSafeZone
+      : null;
+
+    return {
+      name: name || "Nearest Safe Zone",
+      hasCoordinates: !!coordSource,
+      lat: coordSource ? coordSource.lat : null,
+      lon: coordSource ? coordSource.lon : null,
+      distance_km: distance_km,
+      est_walk_minutes: distance_km != null ? Math.round(distance_km * 12) : null,
+      relative_safe_height_m: highGround?.relative_safe_height_m ?? null,
+      elevation_m: highGround?.elevation_m ?? null,
+      facility_type: govShelter?.facility_type ?? null,
+      // Never fabricate these — genuinely unknown unless the curated
+      // static reference data provides them.
+      capacity: govShelter?.capacity ?? null,
+      contact: govShelter?.contact ?? null
+    };
+  },
+
   switchLayer(layerKey) {
     const MAPTILER_KEY = 'rgoSdjnjeWOJOJ0mO1RH';
     const ml3dContainer = document.getElementById('maplibre-3d-container');
@@ -106,8 +157,11 @@ const VajraMap = {
       this.activeBasemap = 'maptiler_hybrid';
 
       const currentRegion = this.selectedRegion || VAJRA_DATA.REGIONS[0];
-      const safeData = currentRegion.nearest_safe_zone || currentRegion.official_government_shelter || currentRegion.candidate_safe_high_ground;
-      const targetCenter = safeData
+      // SAFETY/BUGFIX: previously read safeData.lat/.lon directly, which is
+      // undefined for a real live nearest_safe_zone ({name, distance_km}
+      // only) — that silently produced [NaN, NaN] as the 3D view center.
+      const safeData = this.resolveSafeDestination(currentRegion);
+      const targetCenter = (safeData && safeData.hasCoordinates)
         ? [(currentRegion.center[1] + safeData.lon) / 2, (currentRegion.center[0] + safeData.lat) / 2]
         : [currentRegion.center[1], currentRegion.center[0]];
 
@@ -290,22 +344,23 @@ const VajraMap = {
     // ─────────────────────────────────────────────────────────────
     // 2. EVACUATION WALKING ROUTE GEOJSON (Green Dashed Corridor)
     // ─────────────────────────────────────────────────────────────
-    const mlSafeZone = targetRegion.nearest_safe_zone;
-    const govShelter = targetRegion.official_government_shelter;
-    const highGround = targetRegion.candidate_safe_high_ground;
+    const primaryDest = this.resolveSafeDestination(targetRegion);
 
-    const primaryDest = {
-      name: mlSafeZone?.name || govShelter?.name || highGround?.name || "Designated Safe Relief Camp",
-      lat: mlSafeZone?.lat || govShelter?.lat || highGround?.lat || 30.9905,
-      lon: mlSafeZone?.lon || govShelter?.lon || highGround?.lon || 78.4601,
-      distance_km: mlSafeZone?.distance_km || govShelter?.distance_km || highGround?.distance_km || 2.3,
-      relative_safe_height_m: highGround?.relative_safe_height_m || 142,
-      elevation_m: highGround?.elevation_m || 1280,
-      est_walk_minutes: highGround?.est_walk_minutes || Math.round((mlSafeZone?.distance_km || 2.3) * 12),
-      capacity: govShelter?.capacity || 800,
-      contact: govShelter?.contact || "+91 1374 222108",
-      facility_type: govShelter?.facility_type || "Designated SDMA Relief Center"
-    };
+    // SAFETY: only draw a route/pin to a destination we have REAL
+    // coordinates for. Per the report, region.nearest_safe_zone can be
+    // null (a correct result — already safe, or unreachable) and the
+    // real schema never includes lat/lon — silently drawing a line to a
+    // fabricated point would be actively misleading in an evacuation
+    // feature, so we skip the visual and let the inspector panel show
+    // the honest "no reachable safe zone" state instead.
+    if (!primaryDest || !primaryDest.hasCoordinates) {
+      if (this.maplibreInstance.getSource('vajra-3d-route')) {
+        this.maplibreInstance.getSource('vajra-3d-route').setData({ type: 'FeatureCollection', features: [] });
+      }
+      this.maplibreMarkers.forEach(m => m.remove());
+      this.maplibreMarkers = [];
+      return;
+    }
 
     const startPt = targetRegion.center; // [lat, lon]
     const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon]
@@ -365,7 +420,7 @@ const VajraMap = {
         <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:4px;">
           <strong style="color:#dc2626;">⚠️ Hazard Center — ${targetRegion.village}</strong><br/>
           Risk Score: <strong>${Math.round((targetRegion.risk_score || 0) * 100)}%</strong> [${targetRegion.risk_tier}]<br/>
-          Impact Window: <strong>${targetRegion.expected_time_to_impact_hours || 3.5} hrs</strong>
+          Impact Window: <strong>${targetRegion.expected_time_to_impact_hours != null ? targetRegion.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
         </div>
       `))
       .addTo(this.maplibreInstance);
@@ -389,15 +444,15 @@ const VajraMap = {
             <span style="font-size:1.3rem;">🛡️</span>
             <div>
               <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
-              <span style="font-size:10px;color:#64748b;font-weight:600;">VERIFIED OPERATIONAL SAFE HAVEN</span>
+              <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
             </div>
           </div>
           <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-            <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km} km</strong> (~${primaryDest.est_walk_minutes} mins walk)</p>
-            <p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>
-            <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type}</strong></p>
-            <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity.toLocaleString()} persons</strong></p>
-            <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact}</strong></p>
+            <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'Unknown'}</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+            ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
+            <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
+            <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
+            <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
           </div>
         </div>
       `))
@@ -408,7 +463,7 @@ const VajraMap = {
     const labelEl = document.createElement('div');
     labelEl.className = 'safe-zone-tooltip';
     labelEl.style.transform = 'translateY(-16px)';
-    labelEl.innerHTML = `🛡️ ${primaryDest.name} · ${primaryDest.distance_km} km · Safe High Ground (+${primaryDest.relative_safe_height_m}m)`;
+    labelEl.innerHTML = `🛡️ ${primaryDest.name} · ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'distance unknown'}${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}`;
     const labelMarker3D = new maplibregl.Marker({ element: labelEl })
       .setLngLat([destPt[1], destPt[0]])
       .addTo(this.maplibreInstance);
@@ -418,9 +473,8 @@ const VajraMap = {
     const badgeEl = document.createElement('div');
     badgeEl.className = 'route-badge';
     badgeEl.innerHTML = `
-      <span class="badge-dist">📍 ${primaryDest.distance_km} km</span> &nbsp;|&nbsp;
-      <span class="badge-time">🚶 ~${primaryDest.est_walk_minutes} min</span> &nbsp;|&nbsp;
-      <span class="badge-elev">⛰ +${primaryDest.relative_safe_height_m}m safe</span>
+      <span class="badge-dist">📍 ${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
+      <span class="badge-time">🚶 ${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev">⛰ +${primaryDest.relative_safe_height_m}m safe</span>` : ''}
     `;
     const badgeMarker3D = new maplibregl.Marker({ element: badgeEl })
       .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
@@ -744,9 +798,9 @@ const VajraMap = {
 
     // Sync with 3D MapLibre if 3D satellite view is currently active
     if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
-      const safeData = region.nearest_safe_zone || region.official_government_shelter || region.candidate_safe_high_ground;
-      const targetLon = safeData ? (region.center[1] + safeData.lon) / 2 : region.center[1];
-      const targetLat = safeData ? (region.center[0] + safeData.lat) / 2 : region.center[0];
+      const safeData3D = this.resolveSafeDestination(region);
+      const targetLon = (safeData3D && safeData3D.hasCoordinates) ? (region.center[1] + safeData3D.lon) / 2 : region.center[1];
+      const targetLat = (safeData3D && safeData3D.hasCoordinates) ? (region.center[0] + safeData3D.lat) / 2 : region.center[0];
       this.maplibreInstance.flyTo({
         center: [targetLon, targetLat],
         zoom: 12.8,
@@ -766,33 +820,17 @@ const VajraMap = {
     if (!region) return;
 
     // ─────────────────────────────────────────────────────────────
-    // Resolve primary safe zone from exact ML payload (nearest_safe_zone)
-    // with intelligent fallbacks to official_government_shelter or candidate_safe_high_ground
+    // Resolve primary safe zone honestly — see resolveSafeDestination()
+    // for why this no longer fabricates coordinates/capacity/contact.
     // ─────────────────────────────────────────────────────────────
-    const mlSafeZone = region.nearest_safe_zone;
-    const govShelter = region.official_government_shelter;
     const highGround = region.candidate_safe_high_ground;
-
-    // Primary evacuation destination (Bhatwari Relief Camp from ML model)
-    const primaryDest = {
-      name: mlSafeZone?.name || govShelter?.name || highGround?.name || "Designated Safe Relief Camp",
-      lat: mlSafeZone?.lat || govShelter?.lat || highGround?.lat || 30.9905,
-      lon: mlSafeZone?.lon || govShelter?.lon || highGround?.lon || 78.4601,
-      distance_km: mlSafeZone?.distance_km || govShelter?.distance_km || highGround?.distance_km || 2.3,
-      walking_route: mlSafeZone?.walking_route || "Evacuation Route via NH-34 Ridge Path",
-      relative_safe_height_m: highGround?.relative_safe_height_m || 142,
-      elevation_m: highGround?.elevation_m || (region.riverbed_elevation_m ? region.riverbed_elevation_m + 160 : 1280),
-      est_walk_minutes: highGround?.est_walk_minutes || Math.round((mlSafeZone?.distance_km || 2.3) * 12),
-      capacity: govShelter?.capacity || 800,
-      contact: govShelter?.contact || "+91 1374 222108",
-      facility_type: govShelter?.facility_type || "Designated SDMA Relief Center"
-    };
+    const primaryDest = this.resolveSafeDestination(region);
 
     const startPt = region.center; // [lat, lon] — hazard danger center
-    const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon] — shelter destination
 
     // ─────────────────────────────────────────────────────────────
     // 1. DANGER ORIGIN PIN — pulsing red circle at hazard centre
+    //    (always shown, regardless of whether a safe zone is known)
     // ─────────────────────────────────────────────────────────────
     const dangerIcon = L.divIcon({
       className: '',
@@ -806,10 +844,21 @@ const VajraMap = {
         <strong style="color:#dc2626;">⚠️ Hazard Center — ${region.village}</strong><br/>
         Risk Score: <strong>${Math.round((region.risk_score || 0) * 100)}%</strong> [${region.risk_tier} Tier]<br/>
         Hazard: <strong>${region.hazard_type || 'Landslide / Flash Flood'}</strong><br/>
-        Impact Window: <strong>${region.expected_time_to_impact_hours || 3.5} hrs</strong>
+        Impact Window: <strong>${region.expected_time_to_impact_hours != null ? region.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
       </div>
     `, { sticky: true });
     this.overlayLayers.route_layer.addLayer(dangerMarker);
+
+    // SAFETY: region.nearest_safe_zone === null is a correct result
+    // (already-safe terrain, or an unreachable road fragment — see the
+    // report's field notes). Don't draw a fabricated route/pin in that
+    // case, or when we simply lack real coordinates for the destination
+    // the live API did report.
+    if (!primaryDest || !primaryDest.hasCoordinates) {
+      return;
+    }
+
+    const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon] — shelter destination
 
     // ─────────────────────────────────────────────────────────────
     // 2. DASHED GREEN EVACUATION WALKING ROUTE POLYLINE
@@ -823,8 +872,8 @@ const VajraMap = {
     evacuationRoute.bindTooltip(`
       <div style="font-family:Inter,sans-serif;font-size:0.8rem;color:#0f172a;">
         <strong>🚶 Safe Evacuation Walking Corridor</strong><br/>
-        Distance: <strong>${primaryDest.distance_km} km</strong> (~${primaryDest.est_walk_minutes} min walk)<br/>
-        Elevation Gain: <strong>+${primaryDest.relative_safe_height_m}m</strong> upward safe gradient
+        Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} min walk)` : ''}<br/>
+        ${primaryDest.relative_safe_height_m != null ? `Elevation Gain: <strong>+${primaryDest.relative_safe_height_m}m</strong> upward safe gradient` : ''}
       </div>
     `, { sticky: true });
     this.overlayLayers.route_layer.addLayer(evacuationRoute);
@@ -838,9 +887,7 @@ const VajraMap = {
       className: '',
       html: `
         <div class="route-badge">
-          <span class="badge-dist">📍 ${primaryDest.distance_km} km</span> &nbsp;|&nbsp;
-          <span class="badge-time">🚶 ~${primaryDest.est_walk_minutes} min</span> &nbsp;|&nbsp;
-          <span class="badge-elev">⛰ Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>
+          <span class="badge-dist">📍 ${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time">🚶 ~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev">⛰ Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
         </div>`,
       iconSize: [250, 34],
       iconAnchor: [125, 17]
@@ -849,7 +896,7 @@ const VajraMap = {
     this.overlayLayers.route_layer.addLayer(badgeMarker);
 
     // ─────────────────────────────────────────────────────────────
-    // 4. GREEN SHIELD MARKER AT NEAREST SAFE ZONE (ML Output: Bhatwari Relief Camp)
+    // 4. GREEN SHIELD MARKER AT NEAREST SAFE ZONE
     // ─────────────────────────────────────────────────────────────
     const shieldSVG = `
       <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg">
@@ -864,28 +911,28 @@ const VajraMap = {
     });
     const shieldMarker = L.marker(destPt, { icon: shieldIcon, zIndexOffset: 1200 });
 
-    // Step 3 exact requirement: Tooltip badge showing name, distance, and safe high ground
     shieldMarker.bindTooltip(
-      `🛡️ ${primaryDest.name} · ${primaryDest.distance_km} km · Safe High Ground (+${primaryDest.relative_safe_height_m}m)`,
+      `🛡️ ${primaryDest.name} · ${primaryDest.distance_km} km${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}`,
       { permanent: true, direction: 'top', className: 'safe-zone-tooltip', offset: [0, -22] }
     );
 
-    // Interactive Detailed Popup on Click
+    // Interactive Detailed Popup on Click — every field is either real or
+    // explicitly marked "Not available", never a fabricated placeholder.
     shieldMarker.bindPopup(`
       <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
         <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
           <span style="font-size:1.3rem;">🛡️</span>
           <div>
             <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
-            <span style="font-size:10px;color:#64748b;font-weight:600;">VERIFIED OPERATIONAL SAFE HAVEN</span>
+            <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
           </div>
         </div>
         <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-          <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km} km</strong> (~${primaryDest.est_walk_minutes} mins walk)</p>
-          <p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>
-          <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type}</strong></p>
-          <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity.toLocaleString()} persons</strong></p>
-          <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact}</strong></p>
+          <p style="margin:2px 0;">📍 Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+          ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;">⛰ Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
+          <p style="margin:2px 0;">🏛 Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
+          <p style="margin:2px 0;">👥 Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
+          <p style="margin:2px 0;">📞 Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
         </div>
       </div>
     `, { offset: [0, -15] });
@@ -1019,19 +1066,23 @@ const VajraMap = {
     const env = region.environmental_inputs || {};
     const dq = region.data_quality || { last_updated: "10 mins ago", rainfall: "Good" };
     const exp = region.exposure || { population_in_zone: 0, road_segments_affected: ["N/A"], hospitals_nearby: ["N/A"] };
-    const sz = region.candidate_safe_high_ground || (region.nearest_safe_zone ? {
-      name: region.nearest_safe_zone.name + " Safe High-Ground",
-      elevation_m: 1280,
-      relative_safe_height_m: 142,
-      distance_km: region.nearest_safe_zone.distance_km,
-      est_walk_minutes: Math.round(region.nearest_safe_zone.distance_km * 12),
-      road_accessibility: "Evacuation Trail / NH-34 Ridge Corridor"
+    // SAFETY: don't fabricate elevation/capacity/contact when the real
+    // nearest_safe_zone only has {name, distance_km} (today's actual ML
+    // schema) — see resolveSafeDestination() for the full rationale.
+    const resolvedSafe = this.resolveSafeDestination(region);
+    const sz = region.candidate_safe_high_ground || (resolvedSafe ? {
+      name: resolvedSafe.name + " Safe High-Ground",
+      elevation_m: resolvedSafe.elevation_m,
+      relative_safe_height_m: resolvedSafe.relative_safe_height_m,
+      distance_km: resolvedSafe.distance_km,
+      est_walk_minutes: resolvedSafe.est_walk_minutes,
+      road_accessibility: null
     } : null);
-    const sh = region.official_government_shelter || (region.nearest_safe_zone ? {
-      name: region.nearest_safe_zone.name,
-      facility_type: "Designated SDMA Relief Center",
-      capacity: 800,
-      contact: "+91 1374 222108"
+    const sh = region.official_government_shelter || (resolvedSafe ? {
+      name: resolvedSafe.name,
+      facility_type: resolvedSafe.facility_type,
+      capacity: resolvedSafe.capacity,
+      contact: resolvedSafe.contact
     } : null);
 
     const setElText = (id, text) => {
@@ -1158,16 +1209,19 @@ const VajraMap = {
 
     if (sz) {
       setElText("inspector-safezone-name", sz.name);
+      const elevLine = (sz.elevation_m != null)
+        ? `Elevation: <strong>${sz.elevation_m}m</strong> (+${sz.relative_safe_height_m}m relative height)<br/>`
+        : "";
       setElHTML("inspector-safezone-desc", `
-        Elevation: <strong>${sz.elevation_m}m</strong> (+${sz.relative_safe_height_m}m relative height)<br/>
-        Distance: <strong>${sz.distance_km} km</strong> (~${sz.est_walk_minutes} mins) | Access: <em>${sz.road_accessibility}</em>
+        ${elevLine}
+        Distance: <strong>${sz.distance_km != null ? sz.distance_km + ' km' : 'Unknown'}</strong>${sz.est_walk_minutes != null ? ` (~${sz.est_walk_minutes} mins)` : ''} | Access: <em>${sz.road_accessibility || 'Not available'}</em>
       `);
     }
 
     if (sh) {
       setElText("inspector-shelter-name", sh.name);
       setElHTML("inspector-shelter-desc", `
-        Facility: ${sh.facility_type} | Capacity: <strong>${sh.capacity} persons</strong> | Contact: ${sh.contact}
+        Facility: ${sh.facility_type || 'Not available'} | Capacity: <strong>${sh.capacity != null ? sh.capacity + ' persons' : 'Not available'}</strong> | Contact: ${sh.contact || 'Not available'}
       `);
     }
 

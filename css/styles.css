@@ -169,6 +169,44 @@ h1, h2, h3, h4, h5, h6 {
   border-radius: 4px;
 }
 
+/* Live ML feed status — honest indicator of whether the dashboard is
+   actually connected to the prediction API or showing static demo data. */
+.live-feed-status {
+  font-family: 'Inter', sans-serif;
+  font-size: 0.7rem;
+  font-weight: 800;
+  padding: 3px 9px;
+  border-radius: 999px;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+.live-feed-status.live {
+  background: #f0fdf4;
+  color: #16a34a;
+  border: 1px solid #86efac;
+}
+.live-feed-status.demo {
+  background: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Banner for live alerts received without mapped geometry yet — visible,
+   not silently dropped, per the report's emphasis on honest disclosure. */
+.unmapped-alerts-notice {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #fffbeb;
+  color: #92400e;
+  border: 1px solid #fcd34d;
+  border-radius: 8px;
+  padding: 0.6rem 1rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
 /* Navigation Tabs */
 .nav-tabs {
   display: flex;

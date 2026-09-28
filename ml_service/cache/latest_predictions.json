@@ -1,0 +1,122 @@
+{
+  "cycle_generated_at": "2026-09-27T17:48:23.486346+00:00",
+  "cycle_duration_seconds": 41.2,
+  "environmental_grid_fetched_at": "2026-09-27T17:45:20.468488+00:00",
+  "flood_alerts": [
+    {
+      "alert_id": "UK-WS-65-20260927-1745",
+      "generated_at": "2026-09-27T17:45:20.468488+00:00",
+      "hazard_type": "flood",
+      "location": {
+        "watershed_id": 65,
+        "village": "Jaspur (nearest known settlement, 16.9km away - area may be sparsely populated)"
+      },
+      "risk_score": 0.26,
+      "risk_tier": "Orange",
+      "expected_time_to_impact_hours": 0.51,
+      "nearest_safe_zone": null,
+      "model_version": "vajra-flood-v1",
+      "data_freshness": {
+        "rainfall_granules_used": 24,
+        "soil_moisture_date": "2026-09-22",
+        "soil_moisture_lag_days": 5
+      }
+    },
+    {
+      "alert_id": "UK-WS-142-20260927-1745",
+      "generated_at": "2026-09-27T17:45:20.468488+00:00",
+      "hazard_type": "flood",
+      "location": {
+        "watershed_id": 142,
+        "village": "Bhatwari"
+      },
+      "risk_score": 0.61,
+      "risk_tier": "Red",
+      "expected_time_to_impact_hours": 2.1,
+      "nearest_safe_zone": { "name": "Bhatwari Relief Camp (Govt Inter College)", "distance_km": 2.3 },
+      "model_version": "vajra-flood-v1",
+      "data_freshness": {
+        "rainfall_granules_used": 24,
+        "soil_moisture_date": "2026-09-22",
+        "soil_moisture_lag_days": 5
+      }
+    }
+  ],
+  "landslide_alerts": [
+    {
+      "alert_id": "UK-SU-20820-20260927-1748",
+      "generated_at": "2026-09-27T17:48:23.486346+00:00",
+      "hazard_type": "landslide",
+      "location": {
+        "slope_unit_id": 20820,
+        "village": "Bhatwari"
+      },
+      "risk_score": 0.58,
+      "risk_tier": "Orange",
+      "expected_time_to_impact_hours": null,
+      "nearest_safe_zone": { "name": "Bhatwari Relief Camp (Govt Inter College)", "distance_km": 2.3 },
+      "model_version": "vajra-landslide-v1",
+      "data_freshness": { "soil_moisture_date": null, "soil_moisture_lag_days": null }
+    },
+    {
+      "alert_id": "UK-SU-20821-20260927-1748",
+      "generated_at": "2026-09-27T17:48:23.486346+00:00",
+      "hazard_type": "landslide",
+      "location": {
+        "slope_unit_id": 20821,
+        "village": "Gangotri (Jangla)"
+      },
+      "risk_score": 0.44,
+      "risk_tier": "Orange",
+      "expected_time_to_impact_hours": null,
+      "nearest_safe_zone": { "name": "Gangotri Relief Post", "distance_km": 3.1 },
+      "model_version": "vajra-landslide-v1",
+      "data_freshness": { "soil_moisture_date": null, "soil_moisture_lag_days": null }
+    },
+    {
+      "alert_id": "UK-SU-20822-20260927-1748",
+      "generated_at": "2026-09-27T17:48:23.486346+00:00",
+      "hazard_type": "landslide",
+      "location": {
+        "slope_unit_id": 20822,
+        "village": "Joshiyara & Maneri"
+      },
+      "risk_score": 0.31,
+      "risk_tier": "Yellow",
+      "expected_time_to_impact_hours": null,
+      "nearest_safe_zone": { "name": "Maneri Community Hall", "distance_km": 1.4 },
+      "model_version": "vajra-landslide-v1",
+      "data_freshness": { "soil_moisture_date": null, "soil_moisture_lag_days": null }
+    },
+    {
+      "alert_id": "UK-SU-20823-20260927-1748",
+      "generated_at": "2026-09-27T17:48:23.486346+00:00",
+      "hazard_type": "landslide",
+      "location": {
+        "slope_unit_id": 20823,
+        "village": "Barkot & Yamunotri"
+      },
+      "risk_score": 0.15,
+      "risk_tier": "Yellow",
+      "expected_time_to_impact_hours": null,
+      "nearest_safe_zone": { "name": "Tirpani", "distance_km": 11.96 },
+      "model_version": "vajra-landslide-v1",
+      "data_freshness": { "soil_moisture_date": null, "soil_moisture_lag_days": null }
+    },
+    {
+      "alert_id": "UK-SU-20899-20260927-1748",
+      "generated_at": "2026-09-27T17:48:23.486346+00:00",
+      "hazard_type": "landslide",
+      "location": {
+        "slope_unit_id": 20899,
+        "village": "Sumla (nearest known settlement, 10.1km away - area may be sparsely populated)"
+      },
+      "risk_score": 0.15,
+      "risk_tier": "Yellow",
+      "expected_time_to_impact_hours": null,
+      "nearest_safe_zone": { "name": "Tirpani", "distance_km": 11.96 },
+      "model_version": "vajra-landslide-v1",
+      "data_freshness": { "soil_moisture_date": null, "soil_moisture_lag_days": null }
+    }
+  ]
+}

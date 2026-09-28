@@ -21,6 +21,10 @@ const VajraUI = {
     // 5. Initialize Analyze Telemetry Engine
     VajraAnalyze.init();
 
+    // 6. Connect to the real ML prediction API if available — falls back
+    // to the static demo data already loaded above if it's unreachable.
+    VajraLiveFeed.init();
+
     // Update KPI Header Cards
     this.updateKPICards();
 

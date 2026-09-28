@@ -39,6 +39,16 @@ const RAW_ML_MODEL_OUTPUT = {
 };
 
 // Adapter: Enriches raw ML JSON into VAJRA's operational GIS model
+// NOTE: this adapter (and RAW_ML_MODEL_OUTPUT above) predates
+// VAJRA_DevTeam_Report_and_Handoff.md and was built against a hypothetical
+// mock payload shape. The REAL live output (Part A, Section 4 of that
+// report) does NOT include confidence, why_this_alert, center_lat/lon, or
+// location.state/district — and nearest_safe_zone is only {name,
+// distance_km} or null. This function is still used below to build the
+// STATIC demo/reference REGIONS array (fine, since that's just seed data),
+// but the actual live feed is handled separately by js/live-feed.js's
+// mergeLiveAlertIntoRegion(), which matches the real schema and never
+// invents fields this adapter assumes exist.
 function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
   // Convert GeoJSON [lon, lat] coordinates to Leaflet [lat, lon]
   const geojsonCoords = mlPayload.location.danger_area_shape?.coordinates?.[0] || [];
@@ -115,7 +125,9 @@ function adaptMLPayloadToVajraRegion(mlPayload, baseOverrides = {}) {
     confidence: mlPayload.confidence,
     confidence_display: `${Math.round(mlPayload.confidence[0] * 100)}% – ${Math.round(mlPayload.confidence[1] * 100)}%`,
     expected_time_to_impact_hours: mlPayload.expected_time_to_impact_hours,
-    hazard_window_hours: `Peak impact expected in ${mlPayload.expected_time_to_impact_hours} hours`,
+    hazard_window_hours: mlPayload.expected_time_to_impact_hours != null
+      ? `Peak impact expected in ${mlPayload.expected_time_to_impact_hours} hours`
+      : "Time-to-impact: Not modeled for this hazard type",
     ml_model_version: mlPayload.model_version,
     ml_timestamp: mlPayload.generated_at,
     
