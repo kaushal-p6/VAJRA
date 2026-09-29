@@ -248,6 +248,10 @@ const VajraMap = {
 
           // Render 3D hazard polygons and evacuation route
           this.render3DOverlays(currentRegion);
+
+          this.maplibreInstance.on('zoom', () => {
+            this.update3DZoomState();
+          });
         });
 
         setTimeout(() => {
@@ -395,6 +399,12 @@ const VajraMap = {
         }
       });
 
+      const hazard3DPopup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+        offset: 15
+      });
+
       this.maplibreInstance.on('click', 'vajra-3d-hazard-fill', (e) => {
         if (e.features && e.features[0]) {
           const unitId = e.features[0].properties.unit_id;
@@ -402,11 +412,25 @@ const VajraMap = {
           if (matched) this.selectRegion(matched);
         }
       });
-      this.maplibreInstance.on('mouseenter', 'vajra-3d-hazard-fill', () => {
-        this.maplibreInstance.getCanvas().style.cursor = 'pointer';
+      this.maplibreInstance.on('mousemove', 'vajra-3d-hazard-fill', (e) => {
+        if (e.features && e.features[0]) {
+          const props = e.features[0].properties;
+          const pct = Math.round((props.risk_score || 0) * 100);
+          this.maplibreInstance.getCanvas().style.cursor = 'pointer';
+          hazard3DPopup
+            .setLngLat(e.lngLat)
+            .setHTML(`
+              <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:3px 6px;">
+                <strong>${props.village}</strong><br/>
+                Hazard Probability: <strong style="color:${props.tier === 'Red' ? '#dc2626' : props.tier === 'Orange' ? '#ea580c' : '#16a34a'};">${pct}% [${props.tier}]</strong>
+              </div>
+            `)
+            .addTo(this.maplibreInstance);
+        }
       });
       this.maplibreInstance.on('mouseleave', 'vajra-3d-hazard-fill', () => {
         this.maplibreInstance.getCanvas().style.cursor = '';
+        hazard3DPopup.remove();
       });
     }
 
@@ -473,39 +497,76 @@ const VajraMap = {
     }
 
     // ─────────────────────────────────────────────────────────────
-    // 3. 3D DOM MARKERS: Hazard Center, Green Shield, and Route Badge
+    // 3. 3D DOM MARKERS: Region Probability Beacons, Green Shield, Route Badge
     // ─────────────────────────────────────────────────────────────
     this.maplibreMarkers.forEach(m => m.remove());
     this.maplibreMarkers = [];
 
-    // Hazard Origin Danger Pin (3D)
-    const dangerEl = document.createElement('div');
-    dangerEl.className = 'danger-origin-pin';
-    dangerEl.title = `Hazard Danger Center — ${targetRegion.village}`;
-    dangerEl.innerHTML = `<svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="#ffffff" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>`;
-    const dangerMarker3D = new maplibregl.Marker({ element: dangerEl })
-      .setLngLat([startPt[1], startPt[0]])
-      .setPopup(new maplibregl.Popup({ offset: 15 }).setHTML(`
-        <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:4px;">
-          <strong style="color:#dc2626;display:inline-flex;align-items:center;gap:4px;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="#dc2626" stroke-width="2.2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg> Hazard Center — ${targetRegion.village}</strong><br/>
-          Risk Score: <strong>${Math.round((targetRegion.risk_score || 0) * 100)}%</strong> [${targetRegion.risk_tier}]<br/>
-          Impact Window: <strong>${targetRegion.expected_time_to_impact_hours != null ? targetRegion.expected_time_to_impact_hours + ' hrs' : 'Not modeled for this hazard type'}</strong>
-        </div>
-      `))
-      .addTo(this.maplibreInstance);
-    this.maplibreMarkers.push(dangerMarker3D);
+    // Region Probability Beacons (3D) for all monitored regions
+    VAJRA_DATA.REGIONS.forEach(reg => {
+      const isSelected = reg.unit_id === targetRegion.unit_id;
+      const pct = Math.round((reg.risk_score || 0) * 100);
+      const isRed = reg.risk_tier === "Red";
+      const isOrange = reg.risk_tier === "Orange";
+      const isYellow = reg.risk_tier === "Yellow";
+      const tierWord = isRed ? "red" : isOrange ? "orange" : isYellow ? "yellow" : "green";
+
+      const beaconWrap = document.createElement('div');
+      beaconWrap.className = 'maplibre-marker-wrap';
+      beaconWrap.title = `${reg.village} — Risk Probability: ${pct}% [${reg.risk_tier}]`;
+
+      const beaconEl = document.createElement('div');
+      beaconEl.className = `hazard-beacon hazard-beacon-${tierWord} ${isSelected ? 'hazard-beacon-selected' : ''}`;
+      beaconEl.innerHTML = `
+        ${isRed || isOrange ? `
+          <span class="hazard-beacon-wave wave-1"></span>
+          <span class="hazard-beacon-wave wave-2"></span>
+          <span class="hazard-beacon-wave wave-3"></span>
+        ` : `
+          <span class="hazard-beacon-wave wave-1"></span>
+        `}
+        <span class="hazard-beacon-core">${pct}%</span>
+        <div class="beacon-label">${reg.village}</div>
+      `;
+      beaconWrap.appendChild(beaconEl);
+
+      const beaconMarker3D = new maplibregl.Marker({
+        element: beaconWrap,
+        anchor: 'center'
+      })
+        .setLngLat([reg.center[1], reg.center[0]])
+        .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
+          <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:5px;">
+            <strong style="color: ${isRed ? '#dc2626' : isOrange ? '#ea580c' : '#16a34a'};">${reg.village} (${reg.district})</strong><br/>
+            Risk Probability: <strong>${pct}%</strong> [${reg.risk_tier}]<br/>
+            Coverage: <strong>${reg.data_coverage_type}</strong>
+          </div>
+        `))
+        .addTo(this.maplibreInstance);
+
+      beaconWrap.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.selectRegion(reg);
+      });
+
+      this.maplibreMarkers.push(beaconMarker3D);
+    });
 
     // Green Shield Safe Zone Marker (3D)
+    const shieldWrap = document.createElement('div');
+    shieldWrap.className = 'maplibre-marker-wrap';
     const shieldEl = document.createElement('div');
     shieldEl.className = 'safe-zone-shield';
     shieldEl.title = primaryDest.name;
     shieldEl.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg" style="width:42px;height:42px;">
+      <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg" style="width:38px;height:38px;">
         <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/>
         <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
     `;
-    const shieldMarker3D = new maplibregl.Marker({ element: shieldEl })
+    shieldWrap.appendChild(shieldEl);
+
+    const shieldMarker3D = new maplibregl.Marker({ element: shieldWrap })
       .setLngLat([destPt[1], destPt[0]])
       .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
         <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
@@ -552,19 +613,48 @@ const VajraMap = {
     const dLon3D = destPt[1] - startPt[1];
     const isNorthSouth3D = Math.abs(dLat3D) > Math.abs(dLon3D) * 1.1;
 
+    const badgeWrap = document.createElement('div');
+    badgeWrap.className = 'maplibre-marker-wrap';
     const badgeEl = document.createElement('div');
     badgeEl.className = isNorthSouth3D ? 'route-badge route-badge-side' : 'route-badge route-badge-above';
     badgeEl.innerHTML = `
       <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
       <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>+${primaryDest.relative_safe_height_m}m safe</span>` : ''}
     `;
+    badgeWrap.appendChild(badgeEl);
+
     const badgeMarker3D = new maplibregl.Marker({
-      element: badgeEl,
+      element: badgeWrap,
       offset: isNorthSouth3D ? [75, 0] : [0, -42]
     })
       .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
       .addTo(this.maplibreInstance);
     this.maplibreMarkers.push(badgeMarker3D);
+
+    this.update3DZoomState();
+  },
+
+  update3DZoomState() {
+    if (!this.maplibreInstance) return;
+    const z = this.maplibreInstance.getZoom();
+    const mlContainer = document.getElementById('maplibre-3d-container');
+    const isOverview = z < 10.2;
+
+    if (mlContainer) {
+      mlContainer.classList.toggle('map-zoom-overview', isOverview);
+      mlContainer.classList.toggle('map-zoom-detail', !isOverview);
+
+      const scale = z >= 14 ? 1.05 : z >= 12 ? 0.95 : z >= 10.2 ? 0.85 : 0.75;
+      mlContainer.style.setProperty('--route-badge-scale', scale);
+    }
+
+    if (this.maplibreInstance.getLayer('vajra-3d-route-line')) {
+      this.maplibreInstance.setLayoutProperty(
+        'vajra-3d-route-line',
+        'visibility',
+        isOverview ? 'none' : 'visible'
+      );
+    }
   },
 
 
