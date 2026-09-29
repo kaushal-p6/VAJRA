@@ -669,64 +669,212 @@
         </div>
       </div>
 
-      <!-- Charts -->
-      <div class="charts-grid">
-        <div class="chart-card">
-          <h4>Regional Rainfall vs Soil Moisture Comparison</h4>
-          <div style="height: 250px; position: relative;">
-            <canvas id="analyze-chart"></canvas>
+      <!-- Multi-Dimensional Analytics Suite -->
+      <div class="analytics-suite-wrap">
+        <!-- Navigation Strip -->
+        <div class="analytics-nav-bar">
+          <div class="analytics-nav-title">
+            <svg class="icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+            Analytics View:
+          </div>
+          <button class="analytics-nav-btn active" data-chart-id="deluge" onclick="VajraAnalyze.switchChartMode('deluge')">
+            🌧️ Antecedent Deluge (24h vs 72h)
+          </button>
+          <button class="analytics-nav-btn" data-chart-id="urgency" onclick="VajraAnalyze.switchChartMode('urgency')">
+            ⏱️ Time-to-Impact Urgency Matrix
+          </button>
+          <button class="analytics-nav-btn" data-chart-id="confidence" onclick="VajraAnalyze.switchChartMode('confidence')">
+            🎯 ML Confidence Bounds
+          </button>
+          <button class="analytics-nav-btn" data-chart-id="susceptibility" onclick="VajraAnalyze.switchChartMode('susceptibility')">
+            ⛰️ Slope Susceptibility
+          </button>
+          <button class="analytics-nav-btn" data-chart-id="evacuation" onclick="VajraAnalyze.switchChartMode('evacuation')">
+            🏃 Evacuation Transit
+          </button>
+          <button class="analytics-nav-btn" data-chart-id="healthcare" onclick="VajraAnalyze.switchChartMode('healthcare')">
+            👥 Exposure vs Hospital Beds
+          </button>
+          <button class="analytics-nav-btn btn-view-all" id="btn-toggle-all-charts" onclick="VajraAnalyze.toggleAllChartsView()">
+            📊 View All Graphs Grid
+          </button>
+        </div>
+
+        <!-- Single Focused Chart View (Default) -->
+        <div class="analytics-single-view" id="analytics-single-view">
+          <!-- Main Chart Focus Card -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4 id="focused-chart-title">Regional Rainfall vs Antecedent 72h Saturation Deluge</h4>
+                <div class="chart-subtitle-desc" id="focused-chart-desc">
+                  Compares active 24h precipitation with antecedent 72h accumulation and soil moisture saturation percentage.
+                </div>
+              </div>
+              <span class="chart-badge-tag badge-tag-hydro" id="focused-chart-badge">HYDRO-METEOROLOGY</span>
+            </div>
+
+            <div class="chart-canvas-wrapper">
+              <canvas id="analyze-focused-chart"></canvas>
+            </div>
+
+            <div id="focused-chart-footer" style="display: none;"></div>
+          </div>
+
+          <!-- Side Analytics Column -->
+          <div class="analytics-side-col">
+            <!-- Multi-Hazard Category Breakdown -->
+            <div class="chart-card">
+              <div class="chart-header-row" style="margin-bottom: 0.2rem;">
+                <h4 style="font-size: 0.88rem; margin: 0;">Multi-Hazard Breakdown</h4>
+                <span class="prov-badge prov-badge-model" style="font-size: 0.65rem;">12 EVENTS</span>
+              </div>
+              <div class="chart-subtitle-desc" style="margin-bottom: 0.35rem;">Disaster events by operational classification</div>
+              <div class="chart-canvas-wrapper-sm">
+                <canvas id="analyze-chart-hazard-types"></canvas>
+              </div>
+            </div>
+
+            <!-- Hazard Tier Distribution List -->
+            <div class="chart-card">
+              <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.45rem;">
+                <h4 style="margin: 0; font-size: 0.88rem;">Hazard Tier Distribution</h4>
+                <span class="prov-badge prov-badge-meteo" id="tier-dist-total-badge" style="font-size: 0.65rem;">12 Units</span>
+              </div>
+
+              <div class="tier-distribution-list">
+                <div class="tier-dist-item">
+                  <div class="tier-dist-header">
+                    <span style="color: var(--risk-red); font-weight: 700; font-size: 0.78rem;">● Red (Extreme Risk)</span>
+                    <span id="tier-dist-red" style="font-weight: 700; font-size: 0.78rem; color: #0f172a;">8 Sectors (67%)</span>
+                  </div>
+                  <div class="tier-progress-track">
+                    <div class="tier-progress-fill red" id="tier-bar-red" style="width: 67%;"></div>
+                  </div>
+                </div>
+
+                <div class="tier-dist-item">
+                  <div class="tier-dist-header">
+                    <span style="color: var(--risk-orange); font-weight: 700; font-size: 0.78rem;">● Orange (High Warning)</span>
+                    <span id="tier-dist-orange" style="font-weight: 700; font-size: 0.78rem; color: #0f172a;">4 Sectors (33%)</span>
+                  </div>
+                  <div class="tier-progress-track">
+                    <div class="tier-progress-fill orange" id="tier-bar-orange" style="width: 33%;"></div>
+                  </div>
+                </div>
+
+                <div class="tier-dist-item">
+                  <div class="tier-dist-header">
+                    <span style="color: var(--risk-yellow); font-weight: 700; font-size: 0.78rem;">● Yellow (Moderate Watch)</span>
+                    <span id="tier-dist-yellow" style="font-weight: 700; font-size: 0.78rem; color: #0f172a;">0 Sectors (0%)</span>
+                  </div>
+                  <div class="tier-progress-track">
+                    <div class="tier-progress-fill yellow" id="tier-bar-yellow" style="width: 0%;"></div>
+                  </div>
+                </div>
+
+                <div class="tier-dist-item">
+                  <div class="tier-dist-header">
+                    <span style="color: var(--risk-green); font-weight: 700; font-size: 0.78rem;">● Green (Low Normal)</span>
+                    <span id="tier-dist-green" style="font-weight: 700; font-size: 0.78rem; color: #0f172a;">0 Sectors (0%)</span>
+                  </div>
+                  <div class="tier-progress-track">
+                    <div class="tier-progress-fill green" id="tier-bar-green" style="width: 0%;"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="chart-card">
-          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.65rem;">
-            <h4 style="margin: 0;">Hazard Tier Distribution</h4>
-            <span class="prov-badge prov-badge-meteo" id="tier-dist-total-badge">15 Total Units</span>
+        <!-- Comprehensive Multi-Chart Grid (Revealed when "View All Graphs Grid" is clicked) -->
+        <div class="analytics-multi-grid" id="analytics-multi-grid">
+          <!-- Grid Card 1: Antecedent Deluge -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>🌧️ Antecedent Precipitation (24h vs 72h Deluge)</h4>
+                <div class="chart-subtitle-desc">Comparison of immediate 24h burst vs 72h saturation rainfall</div>
+              </div>
+              <span class="chart-badge-tag badge-tag-hydro">HYDRO-METEOROLOGY</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-deluge"></canvas>
+            </div>
           </div>
 
-          <div class="tier-distribution-list">
-            <!-- Red -->
-            <div class="tier-dist-item">
-              <div class="tier-dist-header">
-                <span style="color: var(--risk-red); font-weight: 700; font-size: 0.82rem;">● Red (Extreme Risk)</span>
-                <span id="tier-dist-red" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">4 Sectors (27%)</span>
+          <!-- Grid Card 2: Urgency Matrix -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>⏱️ Time-to-Impact Urgency Matrix</h4>
+                <div class="chart-subtitle-desc">ETA in hours vs ML Risk Score (bubble size = at-risk population)</div>
               </div>
-              <div class="tier-progress-track">
-                <div class="tier-progress-fill red" id="tier-bar-red" style="width: 27%;"></div>
-              </div>
+              <span class="chart-badge-tag badge-tag-ml">ML DECISION MATRIX</span>
             </div>
-
-            <!-- Orange -->
-            <div class="tier-dist-item">
-              <div class="tier-dist-header">
-                <span style="color: var(--risk-orange); font-weight: 700; font-size: 0.82rem;">● Orange (High Warning)</span>
-                <span id="tier-dist-orange" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">5 Sectors (33%)</span>
-              </div>
-              <div class="tier-progress-track">
-                <div class="tier-progress-fill orange" id="tier-bar-orange" style="width: 33%;"></div>
-              </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-urgency"></canvas>
             </div>
-
-            <!-- Yellow -->
-            <div class="tier-dist-item">
-              <div class="tier-dist-header">
-                <span style="color: var(--risk-yellow); font-weight: 700; font-size: 0.82rem;">● Yellow (Moderate Watch)</span>
-                <span id="tier-dist-yellow" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">4 Sectors (27%)</span>
-              </div>
-              <div class="tier-progress-track">
-                <div class="tier-progress-fill yellow" id="tier-bar-yellow" style="width: 27%;"></div>
-              </div>
+            <div class="urgency-matrix-legend">
+              <span class="urgency-legend-item"><span class="urgency-dot-red"></span> Red Tier (Risk ≥ 90%)</span>
+              <span class="urgency-legend-item"><span class="urgency-dot-orange"></span> Orange Tier (Risk 75-89%)</span>
+              <span style="margin-left: auto; color: #b91c1c; font-weight: 600;">Left-Top = Immediate Evacuation (ETA &lt; 2h)</span>
             </div>
+          </div>
 
-            <!-- Green -->
-            <div class="tier-dist-item">
-              <div class="tier-dist-header">
-                <span style="color: var(--risk-green); font-weight: 700; font-size: 0.82rem;">● Green (Low Normal)</span>
-                <span id="tier-dist-green" style="font-weight: 700; font-size: 0.82rem; color: #0f172a;">2 Sectors (13%)</span>
+          <!-- Grid Card 3: Confidence Intervals -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>🎯 ML Prediction Statistical Confidence Bounds</h4>
+                <div class="chart-subtitle-desc">Lower to upper probability range [Confidence Low, High]</div>
               </div>
-              <div class="tier-progress-track">
-                <div class="tier-progress-fill green" id="tier-bar-green" style="width: 13%;"></div>
+              <span class="chart-badge-tag badge-tag-ml">PROBABILISTIC ML</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-confidence"></canvas>
+            </div>
+          </div>
+
+          <!-- Grid Card 4: Geotechnical Susceptibility -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>⛰️ Geotechnical Susceptibility (Slope vs Moisture)</h4>
+                <div class="chart-subtitle-desc">Terrain steepness angle (°) vs Soil moisture percentage (%)</div>
               </div>
+              <span class="chart-badge-tag badge-tag-geo">GEOTECHNICAL</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-susceptibility"></canvas>
+            </div>
+          </div>
+
+          <!-- Grid Card 5: Evacuation Transit Logistics -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>🏃 Evacuation Transit Logistics</h4>
+                <div class="chart-subtitle-desc">Distance (km) and walking time (minutes) to safe high ground / shelter</div>
+              </div>
+              <span class="chart-badge-tag badge-tag-logistics">DISASTER EVACUATION</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-evacuation"></canvas>
+            </div>
+          </div>
+
+          <!-- Grid Card 6: Exposure vs Hospital Beds -->
+          <div class="chart-card-expanded">
+            <div class="chart-header-row">
+              <div class="chart-title-area">
+                <h4>👥 Humanitarian Exposure vs Hospital Surge Capacity</h4>
+                <div class="chart-subtitle-desc">At-risk village population vs designated district hospital beds</div>
+              </div>
+              <span class="chart-badge-tag badge-tag-logistics">HEALTHCARE CAPACITY</span>
+            </div>
+            <div class="chart-canvas-wrapper">
+              <canvas id="grid-chart-healthcare"></canvas>
             </div>
           </div>
         </div>
