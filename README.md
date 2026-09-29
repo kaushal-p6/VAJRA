@@ -73,28 +73,7 @@ An executive visual intelligence suite powered by Chart.js, configured to **"All
 
 ---
 
-## 🗺️ 3. Verified Ground-Truth Dataset (Events Occurring Post-20 September)
-
-To guarantee 100% realism during SIH evaluation, all mock/random placeholders have been eliminated. VAJRA is calibrated to **12 real-world disasters that occurred between 21 September and 29 September**, verified against official bulletins from **CWC, IMD, NDRF, and SDMAs**:
-
-| # | Sector Unit ID | Location & District | State | Real Date | Disaster Classification & Official Trigger |
-|---|---|---|---|---|---|
-| **1** | `slope_unit_10820` | **Bhubhol & Kiratpur**, Darbhanga | Bihar | 28–29 Sep | **Kosi River Embankment Breach**: 6.61 Lakh Cusecs release from Birpur Barrage (highest in 56 years); western bundh ruptured at Bhubhol. |
-| **2** | `BR-WC-10830` | **Valmikinagar & Bagaha**, West Champaran | Bihar | 28–29 Sep | **Gandak River Bundh Rupture**: River gauge crested at historic 91.25m mark (6.12L cusecs release), breaching bundhs in Bagaha. |
-| **3** | `MH-MM-40100` | **Kurla & Mithi Catchment**, Mumbai | Maharashtra | 25–26 Sep | **275mm Cloudburst Deluge**: IMD Red Alert, Mankhurd logged 276mm, halting Central Railway and submerging Kurla. |
-| **4** | `MH-PN-40200` | **Shivajinagar & Sinhagad Rd**, Pune | Maharashtra | 25–26 Sep | **133mm All-Time September Record Deluge**: Broke Pune's 100-year September single-day record; Mutha river in full spate. |
-| **5** | `UK-SU-20820` | **Bhatwari & Bhagirathi**, Uttarkashi | Uttarakhand | 26–28 Sep | **Bhatwari Landslide Torrent**: Late-monsoon downpour triggered 80m slope failure on NH-34 Gangotri Highway; BRO deployed. |
-| **6** | `BR-ST-10840` | **Madhkaul & Bairgania**, Sitamarhi | Bihar | 28–29 Sep | **Bagmati Embankment Breach**: Heavy Nepal catchment inflow overtopped Bagmati ring bundh, inundating 18 panchayats. |
-| **7** | `UK-CH-30112` | **Helang & Joshimath**, Chamoli | Uttarakhand | 24–27 Sep | **Catastrophic Rockslide**: Severe toe-cutting along Alaknanda gorge dumped 4,000 m³ rock mass, severing NH-07 Badrinath Corridor. |
-| **8** | `UP-GK-50110` | **Sahjanwa & Campierganj**, Gorakhpur | Uttar Pradesh | 23–27 Sep | **Rapti River Extreme Inundation**: Rapti flowed +1.25m above danger level, submerging 56 villages across eastern UP. |
-| **9** | `OD-SB-60100` | **Burla & Mahanadi Basin**, Sambalpur | Odisha | 22–26 Sep | **Hirakud 20-Gate Emergency Spill**: Continuous upper catchment rain forced opening of 20 sluice gates releasing 4.2L cusecs. |
-| **10** | `MH-NS-40300` | **Ramkund & Godavari Basin**, Nashik | Maharashtra | 25–27 Sep | **Godavari Flash Flooding**: Gangapur dam released 15,200 cusecs, submerging Ramkund temples and ghats. |
-| **11** | `AS-LK-80130` | **Bihpuria & Subansiri Basin**, Lakhimpur | Assam | 21–25 Sep | **Subansiri Flash Surge**: Sudden flash surge from Arunachal foothills inundated 24 villages across Lakhimpur. |
-| **12** | `MH-PL-40400` | **Manor & Surya River Basin**, Palghar | Maharashtra | 25–27 Sep | **Surya River & NH-48 Inundation**: Dhamani dam spill caused Surya river to overtop arterial highways. |
-
----
-
-## 📐 4. Mathematical & Machine Learning Formulation
+## 📐 3. Mathematical & Machine Learning Formulation
 
 VAJRA computes hazard probabilities using a hybrid physics-guided gradient boosting framework:
 
@@ -113,7 +92,7 @@ $$\text{Confidence Interval} = \left[ \hat{R} - t_{\alpha/2} \cdot \sigma_{\text
 
 ---
 
-## 📂 5. Project Directory Structure
+## 📂 4. Project Directory Structure
 
 ```
 VAJRA/
@@ -148,7 +127,7 @@ VAJRA/
 
 ---
 
-## 🚀 6. Installation & Quick Start
+## 🚀 5. Installation & Quick Start
 
 ### Prerequisites
 * **Python 3.8+** installed on your system.
@@ -186,7 +165,7 @@ VAJRA/
 
 ---
 
-## 🔑 7. Demo Credentials for Evaluation
+## 🔑 6. Demo Credentials for Evaluation
 
 Use the following credentials in the login modal to demonstrate administrative vs. citizen access:
 
@@ -200,7 +179,7 @@ Use the following credentials in the login modal to demonstrate administrative v
 ---
 
 
-## 🛡️ 8. Standards Compliance
+## 🛡️ 7. Standards Compliance
 
 * **NDMA Guidelines**: Aligned with the National Disaster Management Guidelines for Landslides and Floods (Govt. of India).
 * **CWC Telemetry Standards**: Hydro-meteorological gauge protocols aligned with Central Water Commission telemetry archives.
@@ -208,7 +187,7 @@ Use the following credentials in the login modal to demonstrate administrative v
 
 ---
 
-## 👥 9. Smart India Hackathon (SIH) Submission
+## 👥 8. Smart India Hackathon (SIH) Submission
 * **Theme**: Disaster Management & Resilient Infrastructure
 * **Target Users**: NDRF, SDMAs, District Emergency Operation Centers, Police Control Rooms, and Local Panchayats.
 * **Objective**: Save lives and mitigate economic devastation through hyper-local, physics-informed early warnings.
