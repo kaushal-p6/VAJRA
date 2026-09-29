@@ -882,7 +882,7 @@ h1, h2, h3, h4, h5, h6 {
    marker that has a legible core showing the risk percentage, with the
    pulsing ring layered behind it purely for attention. */
 .hazard-beacon {
-  position: relative; width: 34px; height: 34px;
+  position: relative; width: 44px; height: 44px;
   display: flex; align-items: center; justify-content: center;
   transform: scale(var(--map-beacon-scale, 1));
   transform-origin: center center;
@@ -891,12 +891,12 @@ h1, h2, h3, h4, h5, h6 {
 
 .hazard-beacon-core {
   position: relative; z-index: 2;
-  min-width: 32px; height: 32px; padding: 0 3px;
+  min-width: 40px; height: 40px; padding: 0 4px;
   border-radius: 999px;
   display: flex; align-items: center; justify-content: center;
-  font-family: 'Inter', sans-serif; font-weight: 800; font-size: 0.65rem; color: #fff;
-  border: 2px solid rgba(255, 255, 255, 0.95);
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+  font-family: 'Inter', sans-serif; font-weight: 900; font-size: 0.85rem; color: #fff;
+  border: 2.5px solid rgba(255, 255, 255, 0.95);
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55), inset 0 1px 2px rgba(255, 255, 255, 0.3);
   letter-spacing: -0.2px;
 }
 
@@ -906,19 +906,19 @@ h1, h2, h3, h4, h5, h6 {
 .hazard-beacon-green .hazard-beacon-core { background: #16a34a; }
 
 .hazard-beacon-selected .hazard-beacon-core {
-  outline: 2.5px solid #ffffff;
-  box-shadow: 0 0 0 3.5px #dc2626, 0 4px 14px rgba(0, 0, 0, 0.55);
+  outline: 3px solid #ffffff;
+  box-shadow: 0 0 0 4px #dc2626, 0 4px 16px rgba(0, 0, 0, 0.65);
 }
 
 .hazard-beacon-wave {
   position: absolute; z-index: 1; top: 50%; left: 50%;
-  width: 32px; height: 32px; margin: -16px 0 0 -16px;
+  width: 40px; height: 40px; margin: -20px 0 0 -20px;
   border-radius: 50%; pointer-events: none;
 }
 
 /* Three ripple rings expanding outward for attention */
 .hazard-beacon-wave {
-  border: 2px solid transparent;
+  border: 2.5px solid transparent;
   animation: hazard-wave 2.4s infinite cubic-bezier(0, 0.55, 0.45, 1);
 }
 .hazard-beacon-wave.wave-2 { animation-delay: 0.8s; }
@@ -934,23 +934,24 @@ h1, h2, h3, h4, h5, h6 {
   100% { transform: scale(3.2); opacity: 0; border-width: 0.5px; }
 }
 
-/* Overview Mode (zoomed out): compact 24px beacons showing ONLY percentage core */
+/* Overview Mode (zoomed out / complete map): prominent, legible 38px beacons showing percentage core */
 .map-zoom-overview .hazard-beacon {
-  width: 24px;
-  height: 24px;
+  width: 42px;
+  height: 42px;
 }
 .map-zoom-overview .hazard-beacon-core {
-  min-width: 22px;
-  height: 22px;
-  font-size: 0.56rem;
-  border-width: 1.5px;
-  padding: 0 2px;
-  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  min-width: 38px;
+  height: 38px;
+  font-size: 0.82rem;
+  font-weight: 900;
+  border-width: 2.5px;
+  padding: 0 3px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.55);
 }
 .map-zoom-overview .hazard-beacon-wave {
-  width: 22px;
-  height: 22px;
-  margin: -11px 0 0 -11px;
+  width: 38px;
+  height: 38px;
+  margin: -19px 0 0 -19px;
 }
 
 /* Region Beacon Village Label — Strictly hidden in overview; shown only when zoomed in */

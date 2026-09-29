@@ -770,8 +770,8 @@ const VajraMap = {
             <div class="beacon-label">${region.village}</div>
           </div>
         `,
-        iconSize: [34, 34],
-        iconAnchor: [17, 17]
+        iconSize: [44, 44],
+        iconAnchor: [22, 22]
       });
 
       const beaconMarker = L.marker(region.center, { icon: beaconIcon, zIndexOffset: 1000 });
@@ -899,12 +899,12 @@ const VajraMap = {
   updateMarkerDispersal() {
     if (!this.map || !this.beaconLayers || this.beaconLayers.length === 0) return;
 
-    // Dynamic zoom scaling factor
+    // Dynamic zoom scaling factor — keeps probability circle large and legible across entire overview
     const zoom = this.map.getZoom();
-    const badgeScale = Math.max(0.72, Math.min(1.0, 0.72 + (zoom - 6) * 0.05));
+    const badgeScale = Math.max(0.95, Math.min(1.15, 0.95 + (zoom - 6) * 0.04));
     document.documentElement.style.setProperty('--map-beacon-scale', badgeScale.toFixed(2));
 
-    const MIN_DIST = 26; // Minimum pixel clearance between badge centers
+    const MIN_DIST = 38; // Minimum pixel clearance between larger badge centers
     const MIN_DIST_SQ = MIN_DIST * MIN_DIST;
 
     // 1. Project all markers to screen points at their true geographic base coordinates
@@ -966,8 +966,8 @@ const VajraMap = {
         return angleA - angleB;
       });
 
-      // Subtle, tight radial spread (12-14px) so they are individually distinct but stay firmly within the district
-      const radius = Math.max(12, 10 + group.length * 1.2);
+      // Radial spread so larger probability badges remain individually distinct without overlapping
+      const radius = Math.max(20, 16 + group.length * 2.5);
       const angleStep = (2 * Math.PI) / group.length;
       const startAngle = Math.atan2(group[0].basePt.y - avgY, group[0].basePt.x - avgX);
 
