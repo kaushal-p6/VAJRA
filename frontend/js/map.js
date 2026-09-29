@@ -12,6 +12,10 @@ const VajraMap = {
   beaconLayers: [],
   regionLayers: [],
 
+  // Active Risk Tiers (Red = Extreme, Orange = High, Yellow = Moderate, Green = Low)
+  activeRiskTiers: new Set(["Red", "Orange", "Yellow", "Green"]),
+  contourTileLayer: null,
+
   // Feature Overlay Layers
   overlayLayers: {
     risk_polygons: L.layerGroup(),
@@ -334,25 +338,27 @@ const VajraMap = {
     // ─────────────────────────────────────────────────────────────
     // 1. HAZARD REGIONS GEOJSON (Fill & Outline)
     // ─────────────────────────────────────────────────────────────
-    const hazardFeatures = VAJRA_DATA.REGIONS.filter(r => r.coordinates && r.coordinates.length > 0).map(r => {
-      const ring = r.coordinates.map(pt => [pt[1], pt[0]]);
-      if (ring.length > 0 && (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) {
-        ring.push([ring[0][0], ring[0][1]]);
-      }
-      return {
-        type: 'Feature',
-        properties: {
-          unit_id: r.unit_id,
-          village: r.village,
-          tier: r.risk_tier,
-          risk_score: r.risk_score
-        },
-        geometry: {
-          type: 'Polygon',
-          coordinates: [ring]
+    const hazardFeatures = VAJRA_DATA.REGIONS
+      .filter(r => r.coordinates && r.coordinates.length > 0 && this.activeRiskTiers.has(r.risk_tier))
+      .map(r => {
+        const ring = r.coordinates.map(pt => [pt[1], pt[0]]);
+        if (ring.length > 0 && (ring[0][0] !== ring[ring.length - 1][0] || ring[0][1] !== ring[ring.length - 1][1])) {
+          ring.push([ring[0][0], ring[0][1]]);
         }
-      };
-    });
+        return {
+          type: 'Feature',
+          properties: {
+            unit_id: r.unit_id,
+            village: r.village,
+            tier: r.risk_tier,
+            risk_score: r.risk_score
+          },
+          geometry: {
+            type: 'Polygon',
+            coordinates: [ring]
+          }
+        };
+      });
 
     const hazardGeoJson = {
       type: 'FeatureCollection',
@@ -438,62 +444,56 @@ const VajraMap = {
     // 2. EVACUATION WALKING ROUTE GEOJSON (Green Dashed Corridor)
     // ─────────────────────────────────────────────────────────────
     const primaryDest = this.resolveSafeDestination(targetRegion);
+    const routeCheckbox = document.getElementById("layer_routes");
+    const isRouteEnabled = !routeCheckbox || routeCheckbox.checked;
+    const isTargetTierActive = this.activeRiskTiers.has(targetRegion.risk_tier);
+    const hasRouteDestination = isTargetTierActive && isRouteEnabled && primaryDest && primaryDest.hasCoordinates;
 
-    // SAFETY: only draw a route/pin to a destination we have REAL
-    // coordinates for. Per the report, region.nearest_safe_zone can be
-    // null (a correct result — already safe, or unreachable) and the
-    // real schema never includes lat/lon — silently drawing a line to a
-    // fabricated point would be actively misleading in an evacuation
-    // feature, so we skip the visual and let the inspector panel show
-    // the honest "no reachable safe zone" state instead.
-    if (!primaryDest || !primaryDest.hasCoordinates) {
+    if (!hasRouteDestination) {
       if (this.maplibreInstance.getSource('vajra-3d-route')) {
         this.maplibreInstance.getSource('vajra-3d-route').setData({ type: 'FeatureCollection', features: [] });
       }
-      this.maplibreMarkers.forEach(m => m.remove());
-      this.maplibreMarkers = [];
-      return;
-    }
-
-    const startPt = targetRegion.center; // [lat, lon]
-    const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon]
-
-    const routeGeoJson = {
-      type: 'FeatureCollection',
-      features: [
-        {
-          type: 'Feature',
-          properties: { name: 'Evacuation Route' },
-          geometry: {
-            type: 'LineString',
-            coordinates: [
-              [startPt[1], startPt[0]],
-              [destPt[1], destPt[0]]
-            ]
-          }
-        }
-      ]
-    };
-
-    if (this.maplibreInstance.getSource('vajra-3d-route')) {
-      this.maplibreInstance.getSource('vajra-3d-route').setData(routeGeoJson);
     } else {
-      this.maplibreInstance.addSource('vajra-3d-route', {
-        type: 'geojson',
-        data: routeGeoJson
-      });
+      const startPt = targetRegion.center; // [lat, lon]
+      const destPt = [primaryDest.lat, primaryDest.lon]; // [lat, lon]
 
-      this.maplibreInstance.addLayer({
-        id: 'vajra-3d-route-line',
-        type: 'line',
-        source: 'vajra-3d-route',
-        layout: { 'line-join': 'round', 'line-cap': 'round' },
-        paint: {
-          'line-color': '#22c55e',
-          'line-width': 5,
-          'line-dasharray': [2, 1]
-        }
-      });
+      const routeGeoJson = {
+        type: 'FeatureCollection',
+        features: [
+          {
+            type: 'Feature',
+            properties: { name: 'Evacuation Route' },
+            geometry: {
+              type: 'LineString',
+              coordinates: [
+                [startPt[1], startPt[0]],
+                [destPt[1], destPt[0]]
+              ]
+            }
+          }
+        ]
+      };
+
+      if (this.maplibreInstance.getSource('vajra-3d-route')) {
+        this.maplibreInstance.getSource('vajra-3d-route').setData(routeGeoJson);
+      } else {
+        this.maplibreInstance.addSource('vajra-3d-route', {
+          type: 'geojson',
+          data: routeGeoJson
+        });
+
+        this.maplibreInstance.addLayer({
+          id: 'vajra-3d-route-line',
+          type: 'line',
+          source: 'vajra-3d-route',
+          layout: { 'line-join': 'round', 'line-cap': 'round' },
+          paint: {
+            'line-color': '#22c55e',
+            'line-width': 5,
+            'line-dasharray': [2, 1]
+          }
+        });
+      }
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -502,8 +502,10 @@ const VajraMap = {
     this.maplibreMarkers.forEach(m => m.remove());
     this.maplibreMarkers = [];
 
-    // Region Probability Beacons (3D) for all monitored regions
+    // Region Probability Beacons (3D) for active monitored regions only
     VAJRA_DATA.REGIONS.forEach(reg => {
+      if (!this.activeRiskTiers.has(reg.risk_tier)) return;
+
       const isSelected = reg.unit_id === targetRegion.unit_id;
       const pct = Math.round((reg.risk_score || 0) * 100);
       const isRed = reg.risk_tier === "Red";
@@ -527,6 +529,7 @@ const VajraMap = {
         `}
         <span class="hazard-beacon-core">${pct}%</span>
         <div class="beacon-label">${reg.village}</div>
+        ${this.renderTelemetryDockHTML(reg)}
       `;
       beaconWrap.appendChild(beaconEl);
 
@@ -535,13 +538,6 @@ const VajraMap = {
         anchor: 'center'
       })
         .setLngLat([reg.center[1], reg.center[0]])
-        .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
-          <div style="font-family:Inter,sans-serif;font-size:12px;color:#0f172a;padding:5px;">
-            <strong style="color: ${isRed ? '#dc2626' : isOrange ? '#ea580c' : '#16a34a'};">${reg.village} (${reg.district})</strong><br/>
-            Risk Probability: <strong>${pct}%</strong> [${reg.risk_tier}]<br/>
-            Coverage: <strong>${reg.data_coverage_type}</strong>
-          </div>
-        `))
         .addTo(this.maplibreInstance);
 
       beaconWrap.addEventListener('click', (e) => {
@@ -552,92 +548,93 @@ const VajraMap = {
       this.maplibreMarkers.push(beaconMarker3D);
     });
 
-    // Green Shield Safe Zone Marker (3D)
-    const shieldWrap = document.createElement('div');
-    shieldWrap.className = 'maplibre-marker-wrap';
-    const shieldEl = document.createElement('div');
-    shieldEl.className = 'safe-zone-shield';
-    shieldEl.title = primaryDest.name;
-    shieldEl.innerHTML = `
-      <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg" style="width:38px;height:38px;">
-        <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/>
-        <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-      </svg>
-    `;
-    shieldWrap.appendChild(shieldEl);
+    // Green Shield Safe Zone Marker & Mid-Route Badge (3D)
+    if (hasRouteDestination) {
+      const startPt = targetRegion.center;
+      const destPt = [primaryDest.lat, primaryDest.lon];
 
-    const shieldMarker3D = new maplibregl.Marker({ element: shieldWrap })
-      .setLngLat([destPt[1], destPt[0]])
-      .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
-        <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
-          <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
-            <span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#16a34a" stroke="#ffffff" stroke-width="1.8"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg></span>
-            <div>
-              <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
-              <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
+      const shieldWrap = document.createElement('div');
+      shieldWrap.className = 'maplibre-marker-wrap';
+      const shieldEl = document.createElement('div');
+      shieldEl.className = 'safe-zone-shield';
+      shieldEl.title = primaryDest.name;
+      shieldEl.innerHTML = `
+        <svg viewBox="0 0 24 24" fill="#16a34a" stroke="#ffffff" stroke-width="1.8" xmlns="http://www.w3.org/2000/svg" style="width:38px;height:38px;">
+          <path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/>
+          <path d="M9 12l2 2 4-4" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+        </svg>
+      `;
+      shieldWrap.appendChild(shieldEl);
+
+      const shieldMarker3D = new maplibregl.Marker({ element: shieldWrap })
+        .setLngLat([destPt[1], destPt[0]])
+        .setPopup(new maplibregl.Popup({ offset: 20 }).setHTML(`
+          <div style="font-family:Inter,sans-serif;padding:6px;min-width:240px;color:#0f172a;">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:6px;">
+              <span style="display:inline-flex;"><svg viewBox="0 0 24 24" width="22" height="22" fill="#16a34a" stroke="#ffffff" stroke-width="1.8"><path d="M12 2L3 7v5c0 5.25 3.75 10.15 9 11.35C17.25 22.15 21 17.25 21 12V7L12 2z"/></svg></span>
+              <div>
+                <h4 style="margin:0;font-size:13px;font-weight:800;color:#16a34a;">${primaryDest.name}</h4>
+                <span style="font-size:10px;color:#64748b;font-weight:600;">${primaryDest.facility_type ? 'VERIFIED OPERATIONAL SAFE HAVEN' : 'REPORTED SAFE ZONE — DETAILS PENDING'}</span>
+              </div>
+            </div>
+            <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
+              <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'Unknown'}</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+              ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
+              <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 3l9 7H3z"/></svg>Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
+              <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
+              <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
             </div>
           </div>
-          <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'Unknown'}</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
-            ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
-            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 3l9 7H3z"/></svg>Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
-            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
-            <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>Emergency Phone: <strong>${primaryDest.contact || 'Not available'}</strong></p>
+        `))
+        .addTo(this.maplibreInstance);
+      this.maplibreMarkers.push(shieldMarker3D);
+
+      // Safe Zone hover tooltip
+      const hoverPopup3D = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: false })
+        .setHTML(`
+          <div style="font-family:Inter,sans-serif;font-size:11px;padding:3px 6px;color:#0f172a;">
+            <strong style="color:#16a34a;display:inline-flex;align-items:center;gap:4px;">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              ${primaryDest.name}
+            </strong><br/>
+            Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</strong>
+            ${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}
           </div>
+        `);
+      shieldEl.addEventListener('mouseenter', () => {
+        hoverPopup3D.setLngLat([destPt[1], destPt[0]]).addTo(this.maplibreInstance);
+      });
+      shieldEl.addEventListener('mouseleave', () => {
+        hoverPopup3D.remove();
+      });
+
+      // Floating Mid-Route Distance Badge (3D)
+      const badgeWrap = document.createElement('div');
+      badgeWrap.className = 'maplibre-marker-wrap';
+      const badgeEl = document.createElement('div');
+      badgeEl.className = 'route-badge';
+      badgeEl.innerHTML = `
+        <div class="route-badge-line1">
+          <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span>
+          <span class="badge-sep">•</span>
+          <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes != null ? primaryDest.est_walk_minutes + ' min' : '20 min'}</span>
         </div>
-      `))
-      .addTo(this.maplibreInstance);
-    this.maplibreMarkers.push(shieldMarker3D);
+        ${primaryDest.relative_safe_height_m != null ? `
+          <div class="route-badge-line2">
+            <span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>
+          </div>
+        ` : ''}
+      `;
+      badgeWrap.appendChild(badgeEl);
 
-    // Safe Zone hover tooltip (opens only on hover, not permanent)
-    const hoverPopup3D = new maplibregl.Popup({ offset: 24, closeButton: false, closeOnClick: false })
-      .setHTML(`
-        <div style="font-family:Inter,sans-serif;font-size:11px;padding:3px 6px;color:#0f172a;">
-          <strong style="color:#16a34a;display:inline-flex;align-items:center;gap:4px;">
-            <svg class="icon-svg" viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            ${primaryDest.name}
-          </strong><br/>
-          Distance: <strong>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</strong>
-          ${primaryDest.relative_safe_height_m != null ? ` · Safe High Ground (+${primaryDest.relative_safe_height_m}m)` : ''}
-        </div>
-      `);
-    shieldEl.addEventListener('mouseenter', () => {
-      hoverPopup3D.setLngLat([destPt[1], destPt[0]]).addTo(this.maplibreInstance);
-    });
-    shieldEl.addEventListener('mouseleave', () => {
-      hoverPopup3D.remove();
-    });
-
-    // Floating Mid-Route Distance Badge (3D) — offset off the dashed corridor
-    const dLat3D = destPt[0] - startPt[0];
-    const dLon3D = destPt[1] - startPt[1];
-    const isNorthSouth3D = Math.abs(dLat3D) > Math.abs(dLon3D) * 1.1;
-
-    const badgeWrap = document.createElement('div');
-    badgeWrap.className = 'maplibre-marker-wrap';
-    const badgeEl = document.createElement('div');
-    badgeEl.className = 'route-badge';
-    badgeEl.innerHTML = `
-      <div class="route-badge-line1">
-        <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span>
-        <span class="badge-sep">•</span>
-        <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes != null ? primaryDest.est_walk_minutes + ' min' : '20 min'}</span>
-      </div>
-      ${primaryDest.relative_safe_height_m != null ? `
-        <div class="route-badge-line2">
-          <span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>
-        </div>
-      ` : ''}
-    `;
-    badgeWrap.appendChild(badgeEl);
-
-    const badgeMarker3D = new maplibregl.Marker({
-      element: badgeWrap,
-      offset: [0, -32]
-    })
-      .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
-      .addTo(this.maplibreInstance);
-    this.maplibreMarkers.push(badgeMarker3D);
+      const badgeMarker3D = new maplibregl.Marker({
+        element: badgeWrap,
+        offset: [0, -32]
+      })
+        .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
+        .addTo(this.maplibreInstance);
+      this.maplibreMarkers.push(badgeMarker3D);
+    }
 
     this.update3DZoomState();
   },
@@ -663,10 +660,17 @@ const VajraMap = {
         isOverview ? 'none' : 'visible'
       );
     }
+    this.updateLegendVisibility();
   },
 
 
   focusAllAlerts() {
+    this.isLegendManuallyOpened = false;
+    const legendEl = document.getElementById("map-legend");
+    const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    if (legendEl) legendEl.style.display = "flex";
+    if (toggleBtn) toggleBtn.style.display = "none";
+
     const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
     if (!this.map || allCenters.length === 0) return;
     if (allCenters.length === 1) {
@@ -683,9 +687,20 @@ const VajraMap = {
 
   toggleLayersDrawer() {
     const drawer = document.getElementById("map-layers-drawer");
+    const btn = document.getElementById("map-layers-toggle-btn");
     if (!drawer) return;
     this.isLayersDrawerOpen = !this.isLayersDrawerOpen;
     drawer.classList.toggle("show", this.isLayersDrawerOpen);
+    if (btn) btn.classList.toggle("active", this.isLayersDrawerOpen);
+  },
+
+  closeLayersDrawer() {
+    const drawer = document.getElementById("map-layers-drawer");
+    const btn = document.getElementById("map-layers-toggle-btn");
+    if (!drawer) return;
+    this.isLayersDrawerOpen = false;
+    drawer.classList.remove("show");
+    if (btn) btn.classList.remove("active");
   },
 
   toggleFullscreen() {
@@ -709,11 +724,108 @@ const VajraMap = {
     setTimeout(() => this.map.invalidateSize(), 200);
   },
 
+  // ─────────────────────────────────────────────────────────────
+  // ZERO-COLLISION TELEMETRY DOCK: Displays active environmental
+  // and terrain telemetry parameters in a deterministic vertical
+  // HUD flex stack docked directly to the hazard beacon.
+  // ─────────────────────────────────────────────────────────────
+  renderTelemetryDockHTML(region) {
+    if (!region) return '';
+    const isRainOn = document.getElementById("layer_rainfall")?.checked || false;
+    const isSoilOn = document.getElementById("layer_soil")?.checked || false;
+    const isForecastOn = document.getElementById("layer_forecast")?.checked || false;
+    const isSlopeOn = document.getElementById("layer_slope")?.checked || false;
+    if (!isRainOn && !isSoilOn && !isForecastOn && !isSlopeOn) return '';
+
+    const env = region.environmental_inputs || {};
+    const rainVal = env.rainfall_24h_mm !== undefined ? env.rainfall_24h_mm : (region.rainfall_24h_mm != null ? region.rainfall_24h_mm : 0);
+    const rain72 = env.rainfall_72h_mm !== undefined ? env.rainfall_72h_mm : (region.rainfall_3d_mm != null ? region.rainfall_3d_mm : 0);
+    const soilPct = env.soil_moisture_pct !== undefined ? env.soil_moisture_pct : (region.soil_saturation_pct != null ? region.soil_saturation_pct : 75);
+    const slopeDeg = env.slope_angle_deg !== undefined ? env.slope_angle_deg : (region.slope_angle_deg != null ? region.slope_angle_deg : 35);
+
+    let pills = [];
+    if (isRainOn) {
+      pills.push(`<div class="env-pill env-pill-rain" title="${region.village} 24h Rain: ${rainVal} mm | 72h: ${rain72} mm">🌧️ ${rainVal} mm</div>`);
+    }
+    if (isSoilOn) {
+      pills.push(`<div class="env-pill env-pill-soil" title="${region.village} Soil Saturation: ${soilPct}%">💧 ${soilPct}% Sat</div>`);
+    }
+    if (isForecastOn) {
+      pills.push(`<div class="env-pill env-pill-forecast" title="${region.village} 72h Forecast: ${rain72} mm">⚡ 72h: ${rain72} mm</div>`);
+    }
+    if (isSlopeOn) {
+      pills.push(`<div class="env-pill env-pill-slope" title="${region.village} Terrain Slope: ${slopeDeg}°">📐 ${slopeDeg}° Slope</div>`);
+    }
+
+    return `<div class="beacon-telemetry-dock">${pills.join('')}</div>`;
+  },
+
+  updateTelemetryDocks() {
+    // 1. Update 2D Leaflet beacons
+    if (this.beaconLayers && this.beaconLayers.length > 0) {
+      this.beaconLayers.forEach(item => {
+        const newDockHTML = this.renderTelemetryDockHTML(item.region);
+        const el = item.marker.getElement();
+        if (el) {
+          const beaconEl = el.querySelector(".hazard-beacon");
+          if (beaconEl) {
+            const existingDock = beaconEl.querySelector(".beacon-telemetry-dock");
+            if (existingDock) {
+              existingDock.remove();
+            }
+            if (newDockHTML) {
+              const temp = document.createElement("div");
+              temp.innerHTML = newDockHTML.trim();
+              if (temp.firstElementChild) {
+                beaconEl.appendChild(temp.firstElementChild);
+              }
+            }
+          }
+        }
+
+        // Also update marker's icon definition so zoom changes preserve the dock
+        const tierWord = item.region.risk_tier ? item.region.risk_tier.toLowerCase() : "red";
+        const isRed = item.region.risk_tier === "Red";
+        const isOrange = item.region.risk_tier === "Orange";
+        const pct = Math.round((item.region.risk_score || 0.5) * 100);
+
+        item.marker.setIcon(L.divIcon({
+          className: "beacon-icon-wrapper",
+          html: `
+            <div class="hazard-beacon hazard-beacon-${tierWord}">
+              ${isRed || isOrange ? `
+                <span class="hazard-beacon-wave wave-1"></span>
+                <span class="hazard-beacon-wave wave-2"></span>
+                <span class="hazard-beacon-wave wave-3"></span>
+              ` : `
+                <span class="hazard-beacon-wave wave-1"></span>
+              `}
+              <span class="hazard-beacon-core">${pct}%</span>
+              <div class="beacon-label">${item.region.village}</div>
+              ${newDockHTML}
+            </div>
+          `,
+          iconSize: [44, 44],
+          iconAnchor: [22, 22]
+        }));
+      });
+    }
+
+    // 2. Update 3D MapLibre markers
+    if (this.maplibreInstance) {
+      this.render3DOverlays(this.selectedRegion);
+    }
+
+    // 3. Update collision dispersal
+    this.updateMarkerDispersal();
+  },
+
   renderOperationalOverlays() {
     // Clear existing overlay features
     Object.values(this.overlayLayers).forEach(layerGroup => layerGroup.clearLayers());
     this.beaconLayers = [];
     this.regionLayers = [];
+    this.envLayers = { rainfall: [], soil: [], forecast: [], slope: [] };
 
     // 1. Render Risk Regions (Uttarkashi Pilot & Regional Monitoring)
     VAJRA_DATA.REGIONS.forEach(region => {
@@ -722,6 +834,7 @@ const VajraMap = {
       const isYellow = region.risk_tier === "Yellow";
       const tierClass = isRed ? "risk-zone-red" : isOrange ? "risk-zone-orange" : isYellow ? "risk-zone-yellow" : "risk-zone-green";
       const baseWeight = isRed ? 3.5 : isOrange ? 3 : 2;
+      const isTierActive = this.activeRiskTiers.has(region.risk_tier);
 
       // IMPROVEMENT: added a per-tier CSS class (glow via drop-shadow),
       // rounded line joins/caps so the zone reads as a deliberate hazard
@@ -739,23 +852,39 @@ const VajraMap = {
         dashArray: isRed ? "6 4" : null
       });
 
-      const rainVal = region.environmental_inputs ? region.environmental_inputs.rainfall_24h_mm : (region.rainfall_24h_mm || 0);
+      const env = region.environmental_inputs || {};
+      const rainVal = env.rainfall_24h_mm !== undefined ? env.rainfall_24h_mm : (region.rainfall_24h_mm || 0);
+      const rain72 = env.rainfall_72h_mm !== undefined ? env.rainfall_72h_mm : (region.rainfall_3d_mm || 0);
+      const soilPct = env.soil_moisture_pct !== undefined ? env.soil_moisture_pct : (region.soil_saturation_pct || 75);
+      const slopeDeg = env.slope_angle_deg !== undefined ? env.slope_angle_deg : (region.slope_angle_deg || 35);
+      const tierColor = isRed ? '#dc2626' : isOrange ? '#ea580c' : isYellow ? '#d97706' : '#16a34a';
 
-      polygon.bindTooltip(`
-        <div style="font-family: Inter, sans-serif; font-size: 0.82rem; color: #0f172a;">
-          <strong style="color: ${isRed ? '#dc2626' : isOrange ? '#ea580c' : '#16a34a'}">${region.village} (${region.district})</strong><br/>
-          Scope: <strong>${region.data_coverage_type}</strong><br/>
-          Risk Score: <strong>${(region.risk_score * 100).toFixed(0)}%</strong> [${region.risk_tier}]<br/>
-          Rainfall 24h: <strong>${rainVal} mm</strong>
+      // Rich operational preview card: aligned strictly to the LEFT with zero collision
+      const tooltipContent = `
+        <div class="hazard-zone-tooltip-content">
+          <div class="tooltip-header" style="color: ${tierColor};">${region.village} (${region.district})</div>
+          <div class="tooltip-row">Scope: <strong>${region.data_coverage_type}</strong></div>
+          <div class="tooltip-row">Risk Score: <strong style="color: ${tierColor};">${(region.risk_score * 100).toFixed(0)}%</strong> [${region.risk_tier}]</div>
+          <div class="tooltip-row">Rainfall 24h: <strong>${rainVal} mm</strong></div>
         </div>
-      `, { sticky: false, direction: 'top', offset: [0, -18], opacity: 0.95 });
+      `;
+
+      polygon.bindTooltip(tooltipContent, {
+        className: 'hazard-zone-tooltip',
+        direction: 'left',
+        offset: [-28, -6],
+        opacity: 0.98
+      });
 
       // IMPROVEMENT: thicken the outline on hover so a zone gives immediate
       // feedback that it's interactive, before the click even registers.
       polygon.on("mouseover", () => polygon.setStyle({ weight: baseWeight + 2 }));
       polygon.on("mouseout", () => polygon.setStyle({ weight: baseWeight }));
       polygon.on("click", () => this.selectRegion(region));
-      this.overlayLayers.risk_polygons.addLayer(polygon);
+
+      if (isTierActive) {
+        this.overlayLayers.risk_polygons.addLayer(polygon);
+      }
       this.regionLayers.push({ layer: polygon, tier: region.risk_tier, region: region });
 
       // Region Probability Beacon & Label for all monitored regions
@@ -776,6 +905,7 @@ const VajraMap = {
             `}
             <span class="hazard-beacon-core">${pct}%</span>
             <div class="beacon-label">${region.village}</div>
+            ${this.renderTelemetryDockHTML(region)}
           </div>
         `,
         iconSize: [44, 44],
@@ -783,34 +913,46 @@ const VajraMap = {
       });
 
       const beaconMarker = L.marker(region.center, { icon: beaconIcon, zIndexOffset: 1000 });
-      beaconMarker.bindTooltip(`HAZARD ZONE: ${region.village} — ${pct}% (${region.risk_tier})`, { permanent: false });
+      beaconMarker.bindTooltip(tooltipContent, {
+        className: 'hazard-zone-tooltip',
+        direction: 'left',
+        offset: [-28, -6],
+        opacity: 0.98
+      });
       beaconMarker.on("click", () => this.selectRegion(region));
 
       this.beaconLayers.push({ marker: beaconMarker, region: region });
-      this.overlayLayers.beacon_markers.addLayer(beaconMarker);
+      if (isTierActive) {
+        this.overlayLayers.beacon_markers.addLayer(beaconMarker);
+      }
     });
 
     this.updateMarkerDispersal();
 
 
 
-    // 3. Render Infrastructure Markers (Hospitals & Emergency Stations)
-    // IMPROVEMENT: flat 6px circle dots were easy to lose against busy
-    // satellite/terrain imagery and carried no icon of their own. Use
-    // pin-shaped markers with a simple glyph instead, which read clearly
-    // at a glance and match conventional map-marker iconography.
+    // 3. Render Infrastructure Markers (Hospitals & Tactical Emergency Posts)
     if (VAJRA_DATA.INFRASTRUCTURE) {
       VAJRA_DATA.INFRASTRUCTURE.forEach(infra => {
         const isHosp = infra.type === "Hospital";
         const pinIcon = L.divIcon({
-          className: "",
+          className: "infra-pin-leaflet-wrapper",
           html: `
-            <div class="map-pin ${isHosp ? 'map-pin-hospital' : 'map-pin-emergency'}">
-              <span class="map-pin-icon">${isHosp ? '+' : '!'}</span>
+            <div class="infra-pin-wrap ${isHosp ? 'infra-pin-hospital' : 'infra-pin-emergency'}" title="${infra.name}">
+              <div class="infra-pin-head">
+                ${isHosp ? `
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+                ` : `
+                  <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#ffffff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"/>
+                  </svg>
+                `}
+              </div>
+              <div class="infra-pin-tip"></div>
             </div>
           `,
-          iconSize: [26, 26],
-          iconAnchor: [13, 26]
+          iconSize: [32, 38],
+          iconAnchor: [16, 37]
         });
 
         const infraMarker = L.marker([infra.lat, infra.lon], { icon: pinIcon });
@@ -871,6 +1013,58 @@ const VajraMap = {
     setCount("legend-count-green", counts.Green);
   },
 
+  // Legend visibility & collapsible toggle state
+  isLegendManuallyOpened: false,
+
+  updateLegendVisibility() {
+    let isOverview = true;
+    if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
+      isOverview = this.maplibreInstance.getZoom() < 10.2;
+    } else if (this.map) {
+      isOverview = this.map.getZoom() < 10;
+    }
+
+    const legendEl = document.getElementById("map-legend");
+    const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    if (!legendEl || !toggleBtn) return;
+
+    if (isOverview) {
+      // In overview / whole map view: automatically show legend, hide arrow toggle
+      this.isLegendManuallyOpened = false;
+      legendEl.style.display = "flex";
+      toggleBtn.style.display = "none";
+    } else {
+      // In zoomed-in view: automatically hide legend, show arrow toggle in leftmost part
+      if (this.isLegendManuallyOpened) {
+        legendEl.style.display = "flex";
+        toggleBtn.style.display = "none";
+      } else {
+        legendEl.style.display = "none";
+        toggleBtn.style.display = "flex";
+      }
+    }
+  },
+
+  toggleLegend(forceState) {
+    if (typeof forceState === "boolean") {
+      this.isLegendManuallyOpened = forceState;
+    } else {
+      this.isLegendManuallyOpened = !this.isLegendManuallyOpened;
+    }
+
+    const legendEl = document.getElementById("map-legend");
+    const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    if (!legendEl || !toggleBtn) return;
+
+    if (this.isLegendManuallyOpened) {
+      legendEl.style.display = "flex";
+      toggleBtn.style.display = "none";
+    } else {
+      legendEl.style.display = "none";
+      toggleBtn.style.display = "flex";
+    }
+  },
+
   handleZoomLevelChange() {
     if (!this.map) return;
     const currentZoom = this.map.getZoom();
@@ -881,6 +1075,8 @@ const VajraMap = {
       container.classList.toggle("map-zoom-overview", isOverview);
       container.classList.toggle("map-zoom-detail", !isOverview);
     }
+
+    this.updateLegendVisibility();
 
     // When viewing overview / whole map (zoom < 10), hide the local evacuation route, badge and safe zone shield
     if (isOverview) {
@@ -912,21 +1108,29 @@ const VajraMap = {
     const badgeScale = Math.max(0.95, Math.min(1.15, 0.95 + (zoom - 6) * 0.04));
     document.documentElement.style.setProperty('--map-beacon-scale', badgeScale.toFixed(2));
 
-    const MIN_DIST = 38; // Minimum pixel clearance between larger badge centers
+    const isRainOn = document.getElementById("layer_rainfall")?.checked || false;
+    const isSoilOn = document.getElementById("layer_soil")?.checked || false;
+    const isForecastOn = document.getElementById("layer_forecast")?.checked || false;
+    const isSlopeOn = document.getElementById("layer_slope")?.checked || false;
+    const hasAnyEnv = isRainOn || isSoilOn || isForecastOn || isSlopeOn;
+
+    const MIN_DIST = hasAnyEnv ? 68 : 38; // Increased clearance when telemetry badges are active alongside beacon
     const MIN_DIST_SQ = MIN_DIST * MIN_DIST;
 
-    // 1. Project all markers to screen points at their true geographic base coordinates
-    const items = this.beaconLayers.map(item => {
-      const pt = this.map.latLngToLayerPoint(item.region.center);
-      return {
-        marker: item.marker,
-        region: item.region,
-        baseCenter: item.region.center,
-        basePt: pt,
-        currentPt: { x: pt.x, y: pt.y },
-        clusterId: -1
-      };
-    });
+    // 1. Project all active markers to screen points at their true geographic base coordinates
+    const items = this.beaconLayers
+      .filter(item => this.activeRiskTiers.has(item.region.risk_tier))
+      .map(item => {
+        const pt = this.map.latLngToLayerPoint(item.region.center);
+        return {
+          marker: item.marker,
+          region: item.region,
+          baseCenter: item.region.center,
+          basePt: pt,
+          currentPt: { x: pt.x, y: pt.y },
+          clusterId: -1
+        };
+      });
 
     // 2. Identify clusters of overlapping markers in screen space
     let nextClusterId = 0;
@@ -974,8 +1178,8 @@ const VajraMap = {
         return angleA - angleB;
       });
 
-      // Radial spread so larger probability badges remain individually distinct without overlapping
-      const radius = Math.max(20, 16 + group.length * 2.5);
+      // Radial spread so larger probability badges and telemetry docks remain individually distinct without overlapping
+      const radius = Math.max(hasAnyEnv ? 34 : 20, (hasAnyEnv ? 24 : 16) + group.length * (hasAnyEnv ? 3.5 : 2.5));
       const angleStep = (2 * Math.PI) / group.length;
       const startAngle = Math.atan2(group[0].basePt.y - avgY, group[0].basePt.x - avgX);
 
@@ -1068,11 +1272,37 @@ const VajraMap = {
     document.documentElement.style.setProperty('--route-badge-scale', badgeScale.toFixed(2));
   },
 
+  toggleContourOverlay(isChecked) {
+    if (!this.contourTileLayer) {
+      this.contourTileLayer = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        maxZoom: 17,
+        opacity: 0.5,
+        attribution: "© OpenTopoMap"
+      });
+    }
+    if (isChecked) {
+      if (!this.map.hasLayer(this.contourTileLayer)) {
+        this.contourTileLayer.addTo(this.map);
+      }
+    } else {
+      if (this.map.hasLayer(this.contourTileLayer)) {
+        this.map.removeLayer(this.contourTileLayer);
+      }
+    }
+  },
+
   toggleOverlayGroup(layerId, isChecked) {
     if (layerId.startsWith("risk_")) {
       const tierMap = { risk_extreme: "Red", risk_high: "Orange", risk_moderate: "Yellow", risk_low: "Green" };
       const targetTier = tierMap[layerId];
       if (targetTier) {
+        if (isChecked) {
+          this.activeRiskTiers.add(targetTier);
+        } else {
+          this.activeRiskTiers.delete(targetTier);
+        }
+
+        // 1. Toggle 2D Polygons for this tier
         this.regionLayers.filter(r => r.tier === targetTier).forEach(r => {
           if (isChecked) {
             if (!this.overlayLayers.risk_polygons.hasLayer(r.layer)) {
@@ -1084,7 +1314,42 @@ const VajraMap = {
             }
           }
         });
+
+        // 2. Toggle 2D Probability Beacon Markers (core circle + village label + telemetry dock) for this tier
+        this.beaconLayers.filter(b => b.region.risk_tier === targetTier).forEach(b => {
+          if (isChecked) {
+            if (!this.overlayLayers.beacon_markers.hasLayer(b.marker)) {
+              this.overlayLayers.beacon_markers.addLayer(b.marker);
+            }
+          } else {
+            if (this.overlayLayers.beacon_markers.hasLayer(b.marker)) {
+              this.overlayLayers.beacon_markers.removeLayer(b.marker);
+            }
+          }
+        });
+
+        // 3. Toggle Safe Zone Route & Safe Haven Shield if selectedRegion belongs to this tier
+        if (this.selectedRegion && this.selectedRegion.risk_tier === targetTier) {
+          const routeCb = document.getElementById("layer_routes");
+          const isRouteOn = !routeCb || routeCb.checked;
+          if (isChecked && isRouteOn) {
+            this.drawTopographicSafeZoneRoute(this.selectedRegion);
+          } else {
+            this.overlayLayers.route_layer.clearLayers();
+          }
+        }
+
+        // 4. Synchronize 3D Satellite MapLibre GL
+        if (this.maplibreInstance) {
+          this.render3DOverlays(this.selectedRegion);
+        }
+
+        this.updateMarkerDispersal();
       }
+    } else if (layerId === "layer_rainfall" || layerId === "layer_soil" || layerId === "layer_forecast" || layerId === "layer_slope") {
+      this.updateTelemetryDocks();
+    } else if (layerId === "layer_contours") {
+      this.toggleContourOverlay(isChecked);
     } else if (layerId === "layer_hospitals") {
       if (isChecked) this.overlayLayers.hospitals.addTo(this.map);
       else this.map.removeLayer(this.overlayLayers.hospitals);
@@ -1099,10 +1364,17 @@ const VajraMap = {
         if (!this.map.hasLayer(this.overlayLayers.route_layer)) {
           this.overlayLayers.route_layer.addTo(this.map);
         }
+        if (this.selectedRegion && this.activeRiskTiers.has(this.selectedRegion.risk_tier)) {
+          this.drawTopographicSafeZoneRoute(this.selectedRegion);
+        }
       } else {
         if (this.map.hasLayer(this.overlayLayers.route_layer)) {
           this.map.removeLayer(this.overlayLayers.route_layer);
         }
+        this.overlayLayers.route_layer.clearLayers();
+      }
+      if (this.maplibreInstance) {
+        this.render3DOverlays(this.selectedRegion);
       }
     }
   },
@@ -1111,19 +1383,24 @@ const VajraMap = {
     if (!region) return;
     this.selectedRegion = region;
 
-    // Ensure route layer is always attached and visible for the active region
+    // Check if this region's tier is active and routes are enabled
     const routeCheckbox = document.getElementById("layer_routes");
-    if (routeCheckbox) routeCheckbox.checked = true;
+    const isRouteActive = (!routeCheckbox || routeCheckbox.checked) && this.activeRiskTiers.has(region.risk_tier);
 
-    if (this.map && !this.map.hasLayer(this.overlayLayers.route_layer)) {
-      this.overlayLayers.route_layer.addTo(this.map);
+    if (isRouteActive) {
+      if (this.map && !this.map.hasLayer(this.overlayLayers.route_layer)) {
+        this.overlayLayers.route_layer.addTo(this.map);
+      }
+      this.drawTopographicSafeZoneRoute(region);
+    } else {
+      this.overlayLayers.route_layer.clearLayers();
     }
 
     if (flyTo && this.map) {
       // Calculate bounds encompassing danger area + safe zone shelter
       const safeData = region.nearest_safe_zone || region.official_government_shelter || region.candidate_safe_high_ground;
       const pts = [region.center];
-      if (safeData && safeData.lat && safeData.lon) {
+      if (isRouteActive && safeData && safeData.lat && safeData.lon) {
         pts.push([safeData.lat, safeData.lon]);
       }
       if (region.coordinates && Array.isArray(region.coordinates)) {
@@ -1139,8 +1416,8 @@ const VajraMap = {
     // Sync with 3D MapLibre if 3D satellite view is currently active
     if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
       const safeData3D = this.resolveSafeDestination(region);
-      const targetLon = (safeData3D && safeData3D.hasCoordinates) ? (region.center[1] + safeData3D.lon) / 2 : region.center[1];
-      const targetLat = (safeData3D && safeData3D.hasCoordinates) ? (region.center[0] + safeData3D.lat) / 2 : region.center[0];
+      const targetLon = (isRouteActive && safeData3D && safeData3D.hasCoordinates) ? (region.center[1] + safeData3D.lon) / 2 : region.center[1];
+      const targetLat = (isRouteActive && safeData3D && safeData3D.hasCoordinates) ? (region.center[0] + safeData3D.lat) / 2 : region.center[0];
       this.maplibreInstance.flyTo({
         center: [targetLon, targetLat],
         zoom: 12.8,
@@ -1151,7 +1428,11 @@ const VajraMap = {
       this.render3DOverlays(region);
     }
 
-    this.drawTopographicSafeZoneRoute(region);
+    if (flyTo) {
+      this.isLegendManuallyOpened = false;
+      this.updateLegendVisibility();
+    }
+
     this.updateInspectorUI(region);
     this.updateMarkerDispersal();
     this.updateRouteBadgePosition();
@@ -1160,6 +1441,11 @@ const VajraMap = {
   drawTopographicSafeZoneRoute(region) {
     this.overlayLayers.route_layer.clearLayers();
     if (!region) return;
+
+    // Strict safety check: if region's risk tier is unchecked or routes layer is unchecked, do not render route or safe shield
+    if (!this.activeRiskTiers.has(region.risk_tier)) return;
+    const routeCheckbox = document.getElementById("layer_routes");
+    if (routeCheckbox && !routeCheckbox.checked) return;
 
     const startPt = region.center; // [lat, lon] — hazard danger center
     const highGround = region.candidate_safe_high_ground;

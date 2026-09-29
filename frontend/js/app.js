@@ -263,18 +263,22 @@ const VajraUI = {
       }
     });
 
-    // Outside click dismiss for Map Layers Drawer
-    document.addEventListener("click", (e) => {
+    // Outside click / tap dismiss for Map Layers Drawer
+    const dismissDrawerIfOutside = (e) => {
       const drawer = document.getElementById("map-layers-drawer");
-      const btn = document.querySelector("[onclick*='toggleLayersDrawer']");
-      if (drawer && drawer.classList.contains("show")) {
+      const btn = document.getElementById("map-layers-toggle-btn") || document.querySelector("[onclick*='toggleLayersDrawer']");
+      if (drawer && (drawer.classList.contains("show") || (typeof VajraMap !== "undefined" && VajraMap.isLayersDrawerOpen))) {
         if (!drawer.contains(e.target) && (!btn || !btn.contains(e.target))) {
-          if (typeof VajraMap !== "undefined" && VajraMap.toggleLayersDrawer) {
+          if (typeof VajraMap !== "undefined" && VajraMap.closeLayersDrawer) {
+            VajraMap.closeLayersDrawer();
+          } else if (typeof VajraMap !== "undefined" && VajraMap.isLayersDrawerOpen) {
             VajraMap.toggleLayersDrawer();
           }
         }
       }
-    });
+    };
+    document.addEventListener("pointerdown", dismissDrawerIfOutside);
+    document.addEventListener("click", dismissDrawerIfOutside);
   },
 
   showToast(message, type = "info") {

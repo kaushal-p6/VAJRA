@@ -560,12 +560,6 @@ const VajraAnalyze = {
             <div style="font-size: 0.72rem; color: #64748b;">${r.district || ''}, ${r.state || ''}</div>
           </td>
           <td>
-            <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; gap: 4px;">
-              <span style="width: 6px; height: 6px; border-radius: 50%; background: #2563eb;"></span>
-              ${r.ml_model_version || 'VAJRA ML Model v1.0'}
-            </span>
-          </td>
-          <td>
             <span class="risk-badge ${(r.risk_tier || 'green').toLowerCase()}">${r.risk_tier || 'Green'}</span>
           </td>
           <td>
@@ -717,7 +711,14 @@ const VajraAnalyze = {
 
     VajraUI.switchTab("dashboard");
 
-    if (typeof VajraMap !== "undefined" && VajraMap.map) {
+    if (typeof VajraMap !== "undefined") {
+      const tierCheckboxMap = { Red: "risk_extreme", Orange: "risk_high", Yellow: "risk_moderate", Green: "risk_low" };
+      const checkboxId = tierCheckboxMap[region.risk_tier];
+      if (checkboxId && VajraMap.activeRiskTiers && !VajraMap.activeRiskTiers.has(region.risk_tier)) {
+        VajraMap.toggleOverlayGroup(checkboxId, true);
+        const cb = document.getElementById(`layer_${checkboxId}`) || document.getElementById(checkboxId);
+        if (cb) cb.checked = true;
+      }
       setTimeout(() => {
         const found = VAJRA_DATA.REGIONS.find(r => r.unit_id === unitId);
         if (found) {
@@ -742,7 +743,6 @@ const VajraAnalyze = {
       "Village / Sector",
       "District",
       "State",
-      "ML Model Prediction",
       "Risk Tier",
       "Risk Score (%)",
       "24h Rainfall (mm)",
@@ -766,7 +766,6 @@ const VajraAnalyze = {
         `"${(r.village || '').replace(/"/g, '""')}"`,
         `"${(r.district || '').replace(/"/g, '""')}"`,
         `"${(r.state || '').replace(/"/g, '""')}"`,
-        `"${r.ml_model_version || 'VAJRA ML Model v1.0'}"`,
         `"${r.risk_tier || ''}"`,
         `"${((r.risk_score || 0) * 100).toFixed(0)}%"`,
         rain24,
