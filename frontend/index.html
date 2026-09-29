@@ -677,15 +677,14 @@
             <div class="analytics-toolbar-title">
               <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
               <span>Multi-Dimensional Analytics Suite</span>
-              <span class="prov-badge prov-badge-model" style="font-size: 0.65rem; margin-left: 0.35rem;">12 Verified Sectors</span>
             </div>
 
             <div class="analytics-view-toggle">
-              <button class="analytics-toggle-pill active" id="btn-mode-focused" onclick="VajraAnalyze.setAnalyticsViewMode('focused')" title="View single focused interactive graph with situational context">
+              <button class="analytics-toggle-pill" id="btn-mode-focused" onclick="VajraAnalyze.setAnalyticsViewMode('focused')" title="View single focused interactive graph with situational context">
                 <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
                 Focused View
               </button>
-              <button class="analytics-toggle-pill" id="btn-mode-grid" onclick="VajraAnalyze.setAnalyticsViewMode('grid')" title="Display all 6 primary graphs in a multi-column dashboard grid">
+              <button class="analytics-toggle-pill active" id="btn-mode-grid" onclick="VajraAnalyze.setAnalyticsViewMode('grid')" title="Display all 6 primary graphs in a multi-column dashboard grid">
                 <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
                 All Graphs Grid
               </button>
@@ -694,7 +693,7 @@
 
           <!-- Segmented Tab Pills: 6 evenly distributed, clean buttons -->
           <div class="analytics-tabs-container" id="analytics-tabs-container">
-            <button class="analytics-tab-pill active" data-chart-id="deluge" onclick="VajraAnalyze.switchChartMode('deluge')">
+            <button class="analytics-tab-pill" data-chart-id="deluge" onclick="VajraAnalyze.switchChartMode('deluge')">
               Antecedent Deluge
             </button>
             <button class="analytics-tab-pill" data-chart-id="urgency" onclick="VajraAnalyze.switchChartMode('urgency')">
@@ -715,8 +714,8 @@
           </div>
         </div>
 
-        <!-- Single Focused Chart View (Default) -->
-        <div class="analytics-single-view" id="analytics-single-view">
+        <!-- Single Focused Chart View -->
+        <div class="analytics-single-view" id="analytics-single-view" style="display: none;">
           <!-- Main Chart Focus Card -->
           <div class="chart-card-expanded">
             <div class="chart-header-row">
@@ -802,8 +801,8 @@
           </div>
         </div>
 
-        <!-- Comprehensive Multi-Chart Grid (Revealed when "View All Graphs Grid" is clicked) -->
-        <div class="analytics-multi-grid" id="analytics-multi-grid">
+        <!-- Comprehensive Multi-Chart Grid (Default View) -->
+        <div class="analytics-multi-grid show" id="analytics-multi-grid" style="display: grid;">
           <!-- Grid Card 1: Antecedent Deluge -->
           <div class="chart-card-expanded">
             <div class="chart-header-row">

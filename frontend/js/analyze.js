@@ -16,13 +16,14 @@ const VajraAnalyze = {
   chartInstance: null,
   chartInstances: {},
   activeChartMode: "deluge",
-  isAllChartsView: false,
+  isAllChartsView: true,
   liveDynamicRegions: [],
   searchDebounceTimer: null,
 
   init() {
     // Strictly display the 12 active verified disaster events
     this.liveDynamicRegions = [...(VAJRA_DATA.REGIONS || [])];
+    this.isAllChartsView = true;
     this.render();
   },
 
