@@ -4,7 +4,7 @@
 
 const VAJRA_CONFIG = {
   SYSTEM_NAME: "VAJRA",
-  FULL_NAME: "Village Alert & Just-in-time Risk Assessment",
+  FULL_NAME: "Flash flood prediction system",
   VERSION: "v3.0.0-Operational-Gov",
 
   // Primary Pilot Region & ML Model Scope
