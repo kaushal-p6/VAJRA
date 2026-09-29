@@ -745,16 +745,16 @@ const VajraMap = {
 
     let pills = [];
     if (isRainOn) {
-      pills.push(`<div class="env-pill env-pill-rain" title="${region.village} 24h Rain: ${rainVal} mm | 72h: ${rain72} mm">🌧️ ${rainVal} mm</div>`);
+      pills.push(`<div class="env-pill env-pill-rain" title="${region.village} 24h Rain: ${rainVal} mm | 72h: ${rain72} mm">Rain: ${rainVal} mm</div>`);
     }
     if (isSoilOn) {
-      pills.push(`<div class="env-pill env-pill-soil" title="${region.village} Soil Saturation: ${soilPct}%">💧 ${soilPct}% Sat</div>`);
+      pills.push(`<div class="env-pill env-pill-soil" title="${region.village} Soil Saturation: ${soilPct}%">Soil: ${soilPct}% Sat</div>`);
     }
     if (isForecastOn) {
-      pills.push(`<div class="env-pill env-pill-forecast" title="${region.village} 72h Forecast: ${rain72} mm">⚡ 72h: ${rain72} mm</div>`);
+      pills.push(`<div class="env-pill env-pill-forecast" title="${region.village} 72h Forecast: ${rain72} mm">72h: ${rain72} mm</div>`);
     }
     if (isSlopeOn) {
-      pills.push(`<div class="env-pill env-pill-slope" title="${region.village} Terrain Slope: ${slopeDeg}°">📐 ${slopeDeg}° Slope</div>`);
+      pills.push(`<div class="env-pill env-pill-slope" title="${region.village} Terrain Slope: ${slopeDeg}°">Slope: ${slopeDeg}°</div>`);
     }
 
     return `<div class="beacon-telemetry-dock">${pills.join('')}</div>`;

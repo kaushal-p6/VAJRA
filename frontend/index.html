@@ -671,33 +671,48 @@
 
       <!-- Multi-Dimensional Analytics Suite -->
       <div class="analytics-suite-wrap">
-        <!-- Navigation Strip -->
-        <div class="analytics-nav-bar">
-          <div class="analytics-nav-title">
-            <svg class="icon-svg" viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
-            Analytics View:
+        <!-- Operational Analytics Control Toolbar -->
+        <div class="analytics-toolbar">
+          <div class="analytics-toolbar-top">
+            <div class="analytics-toolbar-title">
+              <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/></svg>
+              <span>Multi-Dimensional Analytics Suite</span>
+              <span class="prov-badge prov-badge-model" style="font-size: 0.65rem; margin-left: 0.35rem;">12 Verified Sectors</span>
+            </div>
+
+            <div class="analytics-view-toggle">
+              <button class="analytics-toggle-pill active" id="btn-mode-focused" onclick="VajraAnalyze.setAnalyticsViewMode('focused')" title="View single focused interactive graph with situational context">
+                <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 3v18"/></svg>
+                Focused View
+              </button>
+              <button class="analytics-toggle-pill" id="btn-mode-grid" onclick="VajraAnalyze.setAnalyticsViewMode('grid')" title="Display all 6 primary graphs in a multi-column dashboard grid">
+                <svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+                All Graphs Grid
+              </button>
+            </div>
           </div>
-          <button class="analytics-nav-btn active" data-chart-id="deluge" onclick="VajraAnalyze.switchChartMode('deluge')">
-            🌧️ Antecedent Deluge (24h vs 72h)
-          </button>
-          <button class="analytics-nav-btn" data-chart-id="urgency" onclick="VajraAnalyze.switchChartMode('urgency')">
-            ⏱️ Time-to-Impact Urgency Matrix
-          </button>
-          <button class="analytics-nav-btn" data-chart-id="confidence" onclick="VajraAnalyze.switchChartMode('confidence')">
-            🎯 ML Confidence Bounds
-          </button>
-          <button class="analytics-nav-btn" data-chart-id="susceptibility" onclick="VajraAnalyze.switchChartMode('susceptibility')">
-            ⛰️ Slope Susceptibility
-          </button>
-          <button class="analytics-nav-btn" data-chart-id="evacuation" onclick="VajraAnalyze.switchChartMode('evacuation')">
-            🏃 Evacuation Transit
-          </button>
-          <button class="analytics-nav-btn" data-chart-id="healthcare" onclick="VajraAnalyze.switchChartMode('healthcare')">
-            👥 Exposure vs Hospital Beds
-          </button>
-          <button class="analytics-nav-btn btn-view-all" id="btn-toggle-all-charts" onclick="VajraAnalyze.toggleAllChartsView()">
-            📊 View All Graphs Grid
-          </button>
+
+          <!-- Segmented Tab Pills: 6 evenly distributed, clean buttons -->
+          <div class="analytics-tabs-container" id="analytics-tabs-container">
+            <button class="analytics-tab-pill active" data-chart-id="deluge" onclick="VajraAnalyze.switchChartMode('deluge')">
+              Antecedent Deluge
+            </button>
+            <button class="analytics-tab-pill" data-chart-id="urgency" onclick="VajraAnalyze.switchChartMode('urgency')">
+              Urgency Matrix (ETA)
+            </button>
+            <button class="analytics-tab-pill" data-chart-id="confidence" onclick="VajraAnalyze.switchChartMode('confidence')">
+              ML Confidence Bounds
+            </button>
+            <button class="analytics-tab-pill" data-chart-id="susceptibility" onclick="VajraAnalyze.switchChartMode('susceptibility')">
+              Slope Susceptibility
+            </button>
+            <button class="analytics-tab-pill" data-chart-id="evacuation" onclick="VajraAnalyze.switchChartMode('evacuation')">
+              Evacuation Logistics
+            </button>
+            <button class="analytics-tab-pill" data-chart-id="healthcare" onclick="VajraAnalyze.switchChartMode('healthcare')">
+              Healthcare Capacity
+            </button>
+          </div>
         </div>
 
         <!-- Single Focused Chart View (Default) -->
@@ -793,7 +808,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>🌧️ Antecedent Precipitation (24h vs 72h Deluge)</h4>
+                <h4>Antecedent Precipitation (24h vs 72h Deluge)</h4>
                 <div class="chart-subtitle-desc">Comparison of immediate 24h burst vs 72h saturation rainfall</div>
               </div>
               <span class="chart-badge-tag badge-tag-hydro">HYDRO-METEOROLOGY</span>
@@ -807,7 +822,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>⏱️ Time-to-Impact Urgency Matrix</h4>
+                <h4>Time-to-Impact Urgency Matrix</h4>
                 <div class="chart-subtitle-desc">ETA in hours vs ML Risk Score (bubble size = at-risk population)</div>
               </div>
               <span class="chart-badge-tag badge-tag-ml">ML DECISION MATRIX</span>
@@ -826,7 +841,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>🎯 ML Prediction Statistical Confidence Bounds</h4>
+                <h4>ML Prediction Statistical Confidence Bounds</h4>
                 <div class="chart-subtitle-desc">Lower to upper probability range [Confidence Low, High]</div>
               </div>
               <span class="chart-badge-tag badge-tag-ml">PROBABILISTIC ML</span>
@@ -840,7 +855,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>⛰️ Geotechnical Susceptibility (Slope vs Moisture)</h4>
+                <h4>Geotechnical Susceptibility (Slope vs Moisture)</h4>
                 <div class="chart-subtitle-desc">Terrain steepness angle (°) vs Soil moisture percentage (%)</div>
               </div>
               <span class="chart-badge-tag badge-tag-geo">GEOTECHNICAL</span>
@@ -854,7 +869,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>🏃 Evacuation Transit Logistics</h4>
+                <h4>Evacuation Transit Logistics</h4>
                 <div class="chart-subtitle-desc">Distance (km) and walking time (minutes) to safe high ground / shelter</div>
               </div>
               <span class="chart-badge-tag badge-tag-logistics">DISASTER EVACUATION</span>
@@ -868,7 +883,7 @@
           <div class="chart-card-expanded">
             <div class="chart-header-row">
               <div class="chart-title-area">
-                <h4>👥 Humanitarian Exposure vs Hospital Surge Capacity</h4>
+                <h4>Humanitarian Exposure vs Hospital Surge Capacity</h4>
                 <div class="chart-subtitle-desc">At-risk village population vs designated district hospital beds</div>
               </div>
               <span class="chart-badge-tag badge-tag-logistics">HEALTHCARE CAPACITY</span>
