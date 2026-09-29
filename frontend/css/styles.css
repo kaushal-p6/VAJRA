@@ -1101,35 +1101,55 @@ h1, h2, h3, h4, h5, h6 {
   z-index: 10;
 }
 
-/* 4. Mid-route distance & elevation badge — offset cleanly from the dashed line with pointer */
+/* 4. Mid-route distance & elevation badge — compact tactical HUD tag cleanly offset from corridor */
 .route-badge {
-  background: rgba(15, 23, 42, 0.94);
+  background: rgba(15, 23, 42, 0.95);
   color: #fff;
-  border: 1.5px solid #16a34a;
-  border-radius: 6px;
-  padding: 3px 8px;
+  border: 1.5px solid #22c55e;
+  border-radius: 8px;
+  padding: 4px 10px;
   font-family: 'Inter', sans-serif;
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 700;
-  white-space: nowrap;
-  backdrop-filter: blur(6px);
-  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.55);
   line-height: 1.35;
-  display: inline-flex;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  position: relative;
+  pointer-events: none;
+  transform: scale(var(--route-badge-scale, 1));
+  transform-origin: center center;
+  transition: transform 0.18s ease-out;
+  text-align: center;
+  white-space: nowrap;
+  max-width: 170px;
+}
+
+.route-badge-line1 {
+  display: flex;
   align-items: center;
   gap: 5px;
-  position: relative;
-  pointer-events: auto;
-  transform: scale(var(--route-badge-scale, 1));
-  transform-origin: left center;
-  transition: transform 0.18s ease-out;
+  color: #f8fafc;
 }
-.route-badge .badge-dist { color: #4ade80; font-weight: 800; }
-.route-badge .badge-time { color: #93c5fd; }
-.route-badge .badge-elev { color: #fbbf24; }
+.route-badge-line1 .badge-dist { color: #4ade80; font-weight: 800; font-size: 11px; }
+.route-badge-line1 .badge-time { color: #93c5fd; font-weight: 600; font-size: 10px; }
+.route-badge-line1 .badge-sep { color: #64748b; font-size: 8px; }
 
-/* Pointer arrow when badge is positioned above the dashed line */
-.route-badge-above::after {
+.route-badge-line2 {
+  font-size: 9.5px;
+  color: #fbbf24;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.route-badge::after {
   content: '';
   position: absolute;
   bottom: -5px;
@@ -1137,23 +1157,9 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateX(-50%);
   width: 0;
   height: 0;
-  border-left: 4px solid transparent;
-  border-right: 4px solid transparent;
-  border-top: 5px solid #16a34a;
-}
-
-/* Pointer arrow when badge is positioned to the side of a dashed line */
-.route-badge-side::after {
-  content: '';
-  position: absolute;
-  left: -5px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 0;
-  height: 0;
-  border-top: 4px solid transparent;
-  border-bottom: 4px solid transparent;
-  border-right: 5px solid #16a34a;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid #22c55e;
 }
 
 /* Overview Mode (zoomed out): route badge, evacuation line & shelter shield MUST be hidden */
@@ -1167,7 +1173,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Detail Mode (zoomed in): visible and interactive */
 .map-zoom-detail .route-badge {
-  display: inline-flex !important;
+  display: flex !important;
   opacity: 1 !important;
 }
 .map-zoom-detail .safe-zone-shield {

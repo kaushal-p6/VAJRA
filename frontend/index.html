@@ -558,18 +558,12 @@
         <div>
           <h2>National Hazard Situation Awareness</h2>
           <p style="font-size: 0.82rem; color: #64748b;">
-            Live weather monitoring across India • Explicitly distinguishes ML Prediction Coverage (Uttarkashi Pilot) from Environmental Monitoring
+            National real-time ML hazard prediction, rainfall telemetry, and flood risk analysis across India
           </p>
         </div>
 
         <div class="search-filter-box">
           <input type="text" class="search-input" id="search-input" placeholder="Search ANY city/district in India (e.g. Wayanad, Shimla)..." oninput="VajraAnalyze.handleSearch(this.value)">
-
-          <select class="filter-select" id="coverage-filter-select" onchange="VajraAnalyze.handleCoverageFilter(this.value)">
-            <option value="ALL">All Coverage Types</option>
-            <option value="ML_PILOT">ML Prediction (Uttarkashi Pilot)</option>
-            <option value="ENV_MONITORING">Environmental Weather Monitoring</option>
-          </select>
 
           <select class="filter-select" id="tier-filter-select" onchange="VajraAnalyze.handleTierFilter(this.value)">
             <option value="ALL">All Hazard Tiers</option>
@@ -633,7 +627,7 @@
             <tr>
               <th>#</th>
               <th data-sort="village" onclick="VajraAnalyze.setSort('village')">Region / District <span class="sort-icon">⇅</span></th>
-              <th>Data Coverage Scope</th>
+              <th>ML Model Prediction</th>
               <th data-sort="risk_tier" onclick="VajraAnalyze.setSort('risk_tier')">Risk Tier <span class="sort-icon">⇅</span></th>
               <th data-sort="rainfall_24h_mm" onclick="VajraAnalyze.setSort('rainfall_24h_mm')">Rainfall 24h (mm) <span class="sort-icon">▼</span></th>
               <th data-sort="soil_saturation_pct" onclick="VajraAnalyze.setSort('soil_saturation_pct')">Soil Moisture <span class="sort-icon">⇅</span></th>

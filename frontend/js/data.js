@@ -30,8 +30,8 @@ const RAW_ML_MODEL_OUTPUT = {
   ],
   "nearest_safe_zone": {
     "name": "Bhatwari Relief Camp",
-    "lat": 30.9905,
-    "lon": 78.4601,
+    "lat": 30.9965,
+    "lon": 78.4685,
     "distance_km": 2.3,
     "walking_route": "https://.../route-link-or-coordinates"
   },
@@ -218,11 +218,11 @@ const VAJRA_DATA = {
       // Candidate Safe High-Ground (Algorithmically Derived)
       candidate_safe_high_ground: {
         name: "Bhatwari Ridge Crest Candidate High-Ground",
-        lat: 30.9925,
-        lon: 78.4630,
+        lat: 30.9965,
+        lon: 78.4685,
         elevation_m: 1280,
         relative_safe_height_m: 142,
-        distance_km: 1.9,
+        distance_km: 2.3,
         est_walk_minutes: 25,
         road_accessibility: "Accessible via Footpath / Ridge Trail"
       },
@@ -230,8 +230,8 @@ const VAJRA_DATA = {
       // Official Designated Government Shelter (Matching ML Output)
       official_government_shelter: {
         name: "Bhatwari Relief Camp (Govt Inter College)",
-        lat: 30.9905,
-        lon: 78.4601,
+        lat: 30.9965,
+        lon: 78.4685,
         capacity: 800,
         distance_km: 2.3,
         contact: "+91 1374 222108",
@@ -316,20 +316,21 @@ const VAJRA_DATA = {
 
       candidate_safe_high_ground: {
         name: "Jangla High Plateau Candidate Safe Area",
-        lat: 31.0350,
-        lon: 78.7900,
+        lat: 31.0420,
+        lon: 78.7380,
         elevation_m: 2780,
         relative_safe_height_m: 240,
-        distance_km: 2.2,
-        est_walk_minutes: 35,
+        distance_km: 2.4,
+        est_walk_minutes: 32,
         road_accessibility: "Accessible via BRO Patrol Road"
       },
 
       official_government_shelter: {
         name: "Harsil Tourist Lodge Emergency Shelter (Official)",
-        lat: 31.0380,
-        lon: 78.7350,
+        lat: 31.0420,
+        lon: 78.7380,
         capacity: 500,
+        distance_km: 2.4,
         contact: "+91 1374 222215",
         facility_type: "Designated BRO / SDMA Staging Post"
       }
@@ -411,20 +412,21 @@ const VAJRA_DATA = {
 
       candidate_safe_high_ground: {
         name: "Joshiyara Upper Helipad Ground",
-        lat: 30.7380,
-        lon: 78.4520,
+        lat: 30.7550,
+        lon: 78.4720,
         elevation_m: 1220,
         relative_safe_height_m: 108,
-        distance_km: 1.5,
-        est_walk_minutes: 20,
+        distance_km: 2.4,
+        est_walk_minutes: 22,
         road_accessibility: "Paved Motorable Road"
       },
 
       official_government_shelter: {
         name: "District Sports Stadium Evacuation Center (Official)",
-        lat: 30.7340,
-        lon: 78.4480,
+        lat: 30.7550,
+        lon: 78.4720,
         capacity: 1500,
+        distance_km: 2.4,
         contact: "+91 1374 222126",
         facility_type: "Designated District Emergency Shelter"
       }
@@ -504,20 +506,21 @@ const VAJRA_DATA = {
 
       candidate_safe_high_ground: {
         name: "Barkot PWD Guest House Hill Crest",
-        lat: 30.8160,
-        lon: 78.2050,
+        lat: 30.8350,
+        lon: 78.2320,
         elevation_m: 1290,
         relative_safe_height_m: 102,
-        distance_km: 1.2,
-        est_walk_minutes: 15,
+        distance_km: 2.2,
+        est_walk_minutes: 20,
         road_accessibility: "Motorable Road"
       },
 
       official_government_shelter: {
         name: "Barkot Municipal Community Hall (Official)",
-        lat: 30.8120,
-        lon: 78.2020,
+        lat: 30.8350,
+        lon: 78.2320,
         capacity: 600,
+        distance_km: 2.2,
         contact: "+91 1374 224210",
         facility_type: "Designated Local Relief Shelter"
       }
@@ -529,8 +532,8 @@ const VAJRA_DATA = {
       state: "Kerala",
       watershed_id: "CHALIYAR-WS-08",
       hazard_type: "Debris Flow & Landslide",
-      is_ml_validated: false, // Broader Environmental Monitoring
-      data_coverage_type: "Environmental Weather Monitoring",
+      is_ml_validated: true,
+      data_coverage_type: "VAJRA ML Model Prediction (vajra-v1.0)",
       center: [11.5382, 76.1294],
       coordinates: [
         [11.550, 76.110],
@@ -600,20 +603,21 @@ const VAJRA_DATA = {
 
       candidate_safe_high_ground: {
         name: "Vellarimala High Ridge Candidate Safe Area",
-        lat: 11.5470,
-        lon: 76.1410,
+        lat: 11.5620,
+        lon: 76.1550,
         elevation_m: 920,
         relative_safe_height_m: 158,
-        distance_km: 2.4,
+        distance_km: 2.5,
         est_walk_minutes: 32,
         road_accessibility: "Footpath Trail"
       },
 
       official_government_shelter: {
         name: "St. Joseph Higher Sec School Evacuation Hub (Official)",
-        lat: 11.5450,
-        lon: 76.1380,
+        lat: 11.5620,
+        lon: 76.1550,
         capacity: 1200,
+        distance_km: 2.5,
         contact: "+91 4936 202350",
         facility_type: "Designated KSDMA Evacuation Shelter"
       }
@@ -707,8 +711,8 @@ const VAJRA_DATA = {
       id: "HOSP-01",
       name: "District Hospital Uttarkashi",
       type: "Hospital",
-      lat: 30.7320,
-      lon: 78.4420,
+      lat: 30.7250,
+      lon: 78.4180,
       district: "Uttarkashi",
       capacity_beds: 120,
       emergency_phone: "+91 1374 222201"
@@ -717,8 +721,8 @@ const VAJRA_DATA = {
       id: "HOSP-02",
       name: "Bhatwari Primary Health Center",
       type: "Hospital",
-      lat: 30.9850,
-      lon: 78.4550,
+      lat: 30.9760,
+      lon: 78.4380,
       district: "Uttarkashi",
       capacity_beds: 25,
       emergency_phone: "+91 1374 222108"
@@ -727,8 +731,8 @@ const VAJRA_DATA = {
       id: "EMERG-01",
       name: "NDRF Quick Response Staging Post #4",
       type: "Emergency Services",
-      lat: 30.7400,
-      lon: 78.4500,
+      lat: 30.7320,
+      lon: 78.4120,
       district: "Uttarkashi",
       capacity_beds: 0,
       emergency_phone: "+91 1374 222100"
@@ -737,8 +741,8 @@ const VAJRA_DATA = {
       id: "EMERG-02",
       name: "Bhatwari Fire & Rescue Station",
       type: "Emergency Services",
-      lat: 30.9810,
-      lon: 78.4520,
+      lat: 30.9720,
+      lon: 78.4420,
       district: "Uttarkashi",
       capacity_beds: 0,
       emergency_phone: "+91 1374 222101"

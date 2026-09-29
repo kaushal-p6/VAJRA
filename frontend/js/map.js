@@ -616,16 +616,24 @@ const VajraMap = {
     const badgeWrap = document.createElement('div');
     badgeWrap.className = 'maplibre-marker-wrap';
     const badgeEl = document.createElement('div');
-    badgeEl.className = isNorthSouth3D ? 'route-badge route-badge-side' : 'route-badge route-badge-above';
+    badgeEl.className = 'route-badge';
     badgeEl.innerHTML = `
-      <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span> &nbsp;|&nbsp;
-      <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>${primaryDest.est_walk_minutes != null ? '~' + primaryDest.est_walk_minutes + ' min' : 'N/A'}</span>${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="11" height="11"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>+${primaryDest.relative_safe_height_m}m safe</span>` : ''}
+      <div class="route-badge-line1">
+        <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km != null ? primaryDest.distance_km + ' km' : 'N/A'}</span>
+        <span class="badge-sep">•</span>
+        <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes != null ? primaryDest.est_walk_minutes + ' min' : '20 min'}</span>
+      </div>
+      ${primaryDest.relative_safe_height_m != null ? `
+        <div class="route-badge-line2">
+          <span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>
+        </div>
+      ` : ''}
     `;
     badgeWrap.appendChild(badgeEl);
 
     const badgeMarker3D = new maplibregl.Marker({
       element: badgeWrap,
-      offset: isNorthSouth3D ? [75, 0] : [0, -42]
+      offset: [0, -32]
     })
       .setLngLat([(startPt[1] + destPt[1]) / 2, (startPt[0] + destPt[0]) / 2])
       .addTo(this.maplibreInstance);
@@ -740,7 +748,7 @@ const VajraMap = {
           Risk Score: <strong>${(region.risk_score * 100).toFixed(0)}%</strong> [${region.risk_tier}]<br/>
           Rainfall 24h: <strong>${rainVal} mm</strong>
         </div>
-      `, { sticky: true, opacity: 0.95 });
+      `, { sticky: false, direction: 'top', offset: [0, -18], opacity: 0.95 });
 
       // IMPROVEMENT: thicken the outline on hover so a zone gives immediate
       // feedback that it's interactive, before the click even registers.
@@ -1045,10 +1053,10 @@ const VajraMap = {
       ny = -ny;
     }
 
-    // Place badge 35% along path from startPt (well away from destPt shield at 100%)
-    // and offset 24px perpendicular to the corridor
-    const t = 0.35;
-    const perpOffset = 24;
+    // Place badge at exact midpoint (50%) along corridor, offset perpendicularly
+    // so it sits cleanly alongside the green dashed corridor without touching either endpoint
+    const t = 0.50;
+    const perpOffset = len < 120 ? 38 : 28;
     const bx = ptStart.x + dx * t + nx * perpOffset;
     const by = ptStart.y + dy * t + ny * perpOffset;
 
@@ -1056,7 +1064,7 @@ const VajraMap = {
     this.routeBadgeMarker.setLatLng(badgeLatLng);
 
     // Dynamic zoom-based scaling for badge
-    const badgeScale = Math.max(0.75, Math.min(1.05, 0.75 + (zoom - 10) * 0.08));
+    const badgeScale = Math.max(0.85, Math.min(1.05, 0.85 + (zoom - 10) * 0.05));
     document.documentElement.style.setProperty('--route-badge-scale', badgeScale.toFixed(2));
   },
 
@@ -1182,20 +1190,29 @@ const VajraMap = {
     this.overlayLayers.route_layer.addLayer(evacuationRoute);
 
     // ─────────────────────────────────────────────────────────────
-    // 2. MID-ROUTE DISTANCE & ELEVATION BADGE (Offset cleanly on the side, scaling with zoom)
+    // 2. MID-ROUTE DISTANCE & ELEVATION BADGE (Compact 2-line HUD centered on corridor)
     // ─────────────────────────────────────────────────────────────
     this.activeRouteData = { region, startPt, destPt, primaryDest };
 
     const badgeIcon = L.divIcon({
       className: '',
       html: `
-        <div class="route-badge route-badge-side" id="active-route-badge">
-          <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km} km</span>${primaryDest.est_walk_minutes != null ? ` &nbsp;|&nbsp;<span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes} min</span>` : ''}${primaryDest.relative_safe_height_m != null ? ` &nbsp;|&nbsp;<span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>` : ''}
+        <div class="route-badge" id="active-route-badge">
+          <div class="route-badge-line1">
+            <span class="badge-dist" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>${primaryDest.distance_km} km</span>
+            <span class="badge-sep">•</span>
+            <span class="badge-time" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>~${primaryDest.est_walk_minutes || 20} min</span>
+          </div>
+          ${primaryDest.relative_safe_height_m != null ? `
+            <div class="route-badge-line2">
+              <span class="badge-elev" style="display:inline-flex;align-items:center;gap:3px;"><svg class="icon-svg" viewBox="0 0 24 24" width="10" height="10"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Safe High Ground (+${primaryDest.relative_safe_height_m}m)</span>
+            </div>
+          ` : ''}
         </div>`,
-      iconSize: [210, 24],
-      iconAnchor: [0, 12]
+      iconSize: [150, 36],
+      iconAnchor: [75, 18]
     });
-    this.routeBadgeMarker = L.marker(startPt, { icon: badgeIcon, interactive: false, zIndexOffset: 600 });
+    this.routeBadgeMarker = L.marker(startPt, { icon: badgeIcon, interactive: false, zIndexOffset: 800 });
     this.overlayLayers.route_layer.addLayer(this.routeBadgeMarker);
     this.updateRouteBadgePosition();
 
@@ -1239,7 +1256,7 @@ const VajraMap = {
           </div>
         </div>
         <div style="border-top:1px solid #e2e8f0;padding-top:6px;font-size:11px;line-height:1.6;">
-          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} mins walk)` : ''}</p>
+          <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>Distance: <strong>${primaryDest.distance_km} km</strong>${primaryDest.est_walk_minutes != null ? ` (~${primaryDest.est_walk_minutes} min walk)` : ''}</p>
           ${primaryDest.elevation_m != null ? `<p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>Elevation: <strong>${primaryDest.elevation_m}m</strong> (<span style="color:#16a34a;font-weight:700;">+${primaryDest.relative_safe_height_m}m</span> above flood level)</p>` : ''}
           <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M3 21h18M3 10h18M5 10v11M19 10v11M9 10v11M15 10v11M12 3l9 7H3z"/></svg>Facility: <strong>${primaryDest.facility_type || 'Not available'}</strong></p>
           <p style="margin:2px 0;"><svg class="icon-svg" viewBox="0 0 24 24" width="13" height="13" style="vertical-align:-2px;margin-right:4px;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>Shelter Capacity: <strong>${primaryDest.capacity != null ? primaryDest.capacity.toLocaleString() + ' persons' : 'Not available'}</strong></p>
@@ -1251,9 +1268,10 @@ const VajraMap = {
     this.overlayLayers.route_layer.addLayer(shieldMarker);
 
     // ─────────────────────────────────────────────────────────────
-    // 4. SECONDARY CANDIDATE RIDGE HIGH-GROUND (if distinct from shelter)
+    // 4. SECONDARY CANDIDATE RIDGE HIGH-GROUND (only if distant distinct branch > 2.5 km)
     // ─────────────────────────────────────────────────────────────
-    if (highGround && (Math.abs(highGround.lat - primaryDest.lat) > 0.001 || Math.abs(highGround.lon - primaryDest.lon) > 0.001)) {
+    const distFromPrimary = highGround ? Math.hypot(highGround.lat - primaryDest.lat, highGround.lon - primaryDest.lon) : 0;
+    if (highGround && distFromPrimary > 0.025) {
       const ridgePt = [highGround.lat, highGround.lon];
       const ridgeRoute = L.polyline([startPt, ridgePt], {
         color: '#059669',

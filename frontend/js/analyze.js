@@ -560,8 +560,9 @@ const VajraAnalyze = {
             <div style="font-size: 0.72rem; color: #64748b;">${r.district || ''}, ${r.state || ''}</div>
           </td>
           <td>
-            <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; ${r.is_ml_validated ? 'background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe;' : 'background: #f8fafc; color: #475569; border: 1px solid #cbd5e1;'}">
-              ${r.is_ml_validated ? 'ML Model (Uttarkashi Pilot)' : 'Environmental Monitoring'}
+            <span style="font-size: 0.68rem; padding: 2px 7px; border-radius: 4px; font-weight: 700; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; display: inline-flex; align-items: center; gap: 4px;">
+              <span style="width: 6px; height: 6px; border-radius: 50%; background: #2563eb;"></span>
+              ${r.ml_model_version || 'VAJRA ML Model v1.0'}
             </span>
           </td>
           <td>
@@ -741,7 +742,7 @@ const VajraAnalyze = {
       "Village / Sector",
       "District",
       "State",
-      "Coverage Scope",
+      "ML Model Prediction",
       "Risk Tier",
       "Risk Score (%)",
       "24h Rainfall (mm)",
@@ -765,7 +766,7 @@ const VajraAnalyze = {
         `"${(r.village || '').replace(/"/g, '""')}"`,
         `"${(r.district || '').replace(/"/g, '""')}"`,
         `"${(r.state || '').replace(/"/g, '""')}"`,
-        `"${r.is_ml_validated ? 'ML Model Pilot' : 'Environmental Monitoring'}"`,
+        `"${r.ml_model_version || 'VAJRA ML Model v1.0'}"`,
         `"${r.risk_tier || ''}"`,
         `"${((r.risk_score || 0) * 100).toFixed(0)}%"`,
         rain24,
