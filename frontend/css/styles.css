@@ -1712,31 +1712,64 @@ h1, h2, h3, h4, h5, h6 {
 /* Modals */
 .modal-overlay {
   position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(4px);
+  background: rgba(15, 23, 42, 0.58); backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
   display: none; align-items: center; justify-content: center; z-index: 2000;
+  cursor: pointer;
 }
 .modal-overlay.show { display: flex; animation: fadeIn 0.2s ease-out; }
 
 .modal-card {
   background: #ffffff; border: 1px solid #cbd5e1; border-radius: 14px;
   width: 460px; max-width: 92vw; padding: 1.5rem; box-shadow: var(--shadow-lg); position: relative;
+  cursor: default;
+}
+
+.modal-header,
+.auth-reg-header {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 1rem;
+  width: 100%;
+  margin-bottom: 0.9rem;
+}
+
+.modal-header > div:first-child,
+.modal-header h3,
+.auth-reg-header > div:first-child {
+  flex: 1 1 auto;
+  margin: 0;
 }
 
 .modal-close-btn {
   background: transparent;
   border: none;
-  color: #94a3b8;
+  color: #64748b;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  padding: 4px;
-  border-radius: 6px;
+  width: 32px;
+  height: 32px;
+  min-width: 32px;
+  min-height: 32px;
+  padding: 0;
+  border-radius: 8px;
   transition: all 0.15s ease;
+  margin-left: auto;
+  flex-shrink: 0;
 }
 .modal-close-btn:hover {
   color: #0f172a;
   background: #f1f5f9;
+}
+
+.modal-close-corner {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 10;
 }
 
 .form-group { margin-bottom: 0.85rem; }

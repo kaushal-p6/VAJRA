@@ -815,8 +815,8 @@
   </div>
 
   <!-- Request Authorized Access Registration Modal -->
-  <div class="modal-overlay" id="registration-modal">
-    <div class="modal-card auth-registration-card">
+  <div class="modal-overlay" id="registration-modal" onclick="VajraUI.handleBackdropClick(event, 'registration-modal')">
+    <div class="modal-card auth-registration-card" onclick="event.stopPropagation()">
       <div class="modal-header auth-reg-header">
         <div>
           <h3 class="auth-reg-title">Request Authorized Access</h3>
@@ -1018,8 +1018,11 @@
   </div>
 
   <!-- Registration Success Modal -->
-  <div class="modal-overlay" id="reg-success-modal">
-    <div class="modal-card auth-success-card">
+  <div class="modal-overlay" id="reg-success-modal" onclick="VajraUI.handleBackdropClick(event, 'reg-success-modal')">
+    <div class="modal-card auth-success-card" onclick="event.stopPropagation()">
+      <button class="modal-close-btn modal-close-corner" onclick="VajraRegistration.finishAndBackToLogin()" aria-label="Close" title="Close">
+        <svg class="icon-svg" viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+      </button>
       <div class="success-icon-badge">
         <svg class="icon-svg" viewBox="0 0 24 24" width="36" height="36" fill="none" stroke="#2563eb" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
@@ -1081,11 +1084,11 @@
   </div>
 
   <!-- Official CAP Alert Transmission Modal -->
-  <div class="modal-overlay" id="dispatch-modal">
-    <div class="modal-card" style="width: 520px; max-width: 92vw;">
-      <div class="modal-header" style="margin-bottom: 0.9rem;">
+  <div class="modal-overlay" id="dispatch-modal" onclick="VajraUI.handleBackdropClick(event, 'dispatch-modal')">
+    <div class="modal-card" style="width: 520px; max-width: 92vw;" onclick="event.stopPropagation()">
+      <div class="modal-header">
         <h3 style="color: var(--risk-red); font-size: 1.05rem;" id="dispatch-modal-title">Confirm Emergency Broadcast Transmission</h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('dispatch-modal')" aria-label="Close">
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('dispatch-modal')" aria-label="Close" title="Close">
           <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
@@ -1123,11 +1126,11 @@
   </div>
 
   <!-- Government CAP Architecture Modal -->
-  <div class="modal-overlay" id="cap-protocol-modal">
-    <div class="modal-card" style="width: 580px;">
+  <div class="modal-overlay" id="cap-protocol-modal" onclick="VajraUI.handleBackdropClick(event, 'cap-protocol-modal')">
+    <div class="modal-card" style="width: 580px; max-width: 92vw;" onclick="event.stopPropagation()">
       <div class="modal-header">
         <h3 style="color: #1e3a8a;">Government Cell Broadcast & CAP Protocol Integration</h3>
-        <button class="modal-close-btn" onclick="VajraUI.closeModal('cap-protocol-modal')" aria-label="Close">
+        <button class="modal-close-btn" onclick="VajraUI.closeModal('cap-protocol-modal')" aria-label="Close" title="Close">
           <svg class="icon-svg" viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>

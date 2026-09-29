@@ -28,6 +28,9 @@ const VajraUI = {
     // Update KPI Header Cards
     this.updateKPICards();
 
+    // 7. Initialize Modal & Drawer Outside-Click / Backdrop Dismissal
+    this.initModalBackdropDismiss();
+
     // Global Click Listener for dropdown dismissal
     document.addEventListener("click", (e) => {
       const notifWrapper = document.querySelector(".notif-wrapper");
@@ -199,12 +202,79 @@ const VajraUI = {
 
   showModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.add("show");
+    if (modal) {
+      modal.classList.add("show");
+      document.body.style.overflow = "hidden";
+    }
   },
 
   closeModal(id) {
     const modal = document.getElementById(id);
-    if (modal) modal.classList.remove("show");
+    if (modal) {
+      modal.classList.remove("show");
+      if (!document.querySelector(".modal-overlay.show")) {
+        document.body.style.overflow = "";
+      }
+    }
+  },
+
+  handleBackdropClose(modalId) {
+    if (!modalId) return;
+    if (modalId === "registration-modal") {
+      if (typeof VajraRegistration !== "undefined" && VajraRegistration.close) {
+        VajraRegistration.close();
+      } else {
+        this.closeModal(modalId);
+      }
+    } else if (modalId === "reg-success-modal") {
+      if (typeof VajraRegistration !== "undefined" && VajraRegistration.finishAndBackToLogin) {
+        VajraRegistration.finishAndBackToLogin();
+      } else {
+        this.closeModal(modalId);
+      }
+    } else {
+      this.closeModal(modalId);
+    }
+  },
+
+  handleBackdropClick(e, modalId) {
+    if (e.target && e.target.classList.contains("modal-overlay")) {
+      this.handleBackdropClose(modalId || e.target.id);
+    }
+  },
+
+  initModalBackdropDismiss() {
+    // Backdrop click / tap on all modal overlays
+    document.querySelectorAll(".modal-overlay").forEach(overlay => {
+      overlay.addEventListener("click", (e) => {
+        if (e.target === overlay) {
+          this.handleBackdropClose(overlay.id);
+        }
+      });
+    });
+
+    // Close open modal on Escape key
+    document.addEventListener("keydown", (e) => {
+      if (e.key === "Escape") {
+        const openOverlay = document.querySelector(".modal-overlay.show");
+        if (openOverlay) {
+          this.handleBackdropClose(openOverlay.id);
+        }
+      }
+    });
+
+    // Outside click dismiss for Map Layers Drawer
+    document.addEventListener("click", (e) => {
+      const drawer = document.getElementById("map-layers-drawer");
+      const btn = document.querySelector("[onclick*='toggleLayersDrawer']");
+      if (drawer && drawer.classList.contains("show")) {
+        if (!drawer.contains(e.target) && (!btn || !btn.contains(e.target))) {
+          if (typeof VajraMap !== "undefined" && VajraMap.toggleLayersDrawer) {
+            VajraMap.toggleLayersDrawer();
+          }
+        }
+      }
+    });
   },
 
   showToast(message, type = "info") {
