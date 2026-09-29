@@ -1719,6 +1719,48 @@ h1, h2, h3, h4, h5, h6 {
 
 .telemetry-table tr:hover td { background: #f8fafc; }
 
+/* Highlighted Row (when navigating from alert notification) */
+@keyframes alertRowGlowPulse {
+  0% {
+    background-color: #fef08a !important;
+  }
+  20% {
+    background-color: #fde047 !important;
+  }
+  45% {
+    background-color: #fef08a !important;
+  }
+  70% {
+    background-color: #fef9c3 !important;
+  }
+  90% {
+    background-color: #fefce8 !important;
+  }
+  100% {
+    background-color: transparent;
+  }
+}
+
+.alert-row-highlight td {
+  animation: alertRowGlowPulse 3.8s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.alert-row-highlight td:first-child {
+  border-left: 5px solid #d97706 !important;
+}
+
+.alert-row-highlight td:last-child {
+  border-right: 5px solid #d97706 !important;
+}
+
+.alert-row-highlight {
+  box-shadow: 0 0 16px rgba(217, 119, 6, 0.4);
+  position: relative;
+  z-index: 2;
+}
+
 .pagination-bar {
   display: flex; align-items: center; justify-content: space-between;
   background: #ffffff; border: 1px solid #cbd5e1; border-radius: 9px; padding: 0.65rem 1.1rem;

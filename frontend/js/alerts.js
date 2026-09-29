@@ -44,7 +44,7 @@ const VajraAlerts = {
     }
 
     notifBody.innerHTML = filteredNotifs.map(n => `
-      <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="VajraAlerts.markAsRead('${n.id}')">
+      <div class="notif-item ${n.unread ? 'unread' : ''}" onclick="VajraAlerts.handleNotificationClick('${n.id}')" title="Click to view alert details in Alert Management">
         <div class="notif-icon ${n.type}">
           ${n.type === 'alert' ? '<svg class="icon-svg" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>' :
             n.type === 'warning' ? '<svg class="icon-svg" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>' :
@@ -57,6 +57,75 @@ const VajraAlerts = {
         </div>
       </div>
     `).join("");
+  },
+
+  handleNotificationClick(id) {
+    // 1. Mark notification as read
+    this.markAsRead(id);
+
+    // 2. Close notification dropdown
+    const dropdown = document.getElementById("notif-dropdown");
+    if (dropdown) dropdown.classList.remove("show");
+
+    // 3. Find matching alert history ID
+    const notif = VAJRA_DATA.NOTIFICATIONS.find(n => n.id === id);
+    let targetAlertId = notif ? notif.alert_history_id : null;
+
+    if (!targetAlertId && notif) {
+      // Fallback: match by location name in alert history
+      const match = VAJRA_DATA.ALERT_HISTORY.find(e => {
+        const place = (e.location || "").split(",")[0].trim().toLowerCase();
+        return place && (
+          (notif.message && notif.message.toLowerCase().includes(place)) ||
+          (notif.title && notif.title.toLowerCase().includes(place))
+        );
+      });
+      if (match) targetAlertId = match.id;
+    }
+
+    if (!targetAlertId && VAJRA_DATA.ALERT_HISTORY.length > 0) {
+      targetAlertId = VAJRA_DATA.ALERT_HISTORY[0].id;
+    }
+
+    // 4. Reset table filter to 'ALL' so target row is visible
+    this.historyFilterStatus = "ALL";
+
+    // 5. Switch to Alert Management tab
+    if (typeof VajraUI !== "undefined" && VajraUI.switchTab) {
+      VajraUI.switchTab("alerts");
+    }
+
+    // Force re-render table to ensure row exists in DOM
+    this.renderAlertHistory();
+
+    // 6. Highlight and smoothly scroll row into view
+    if (targetAlertId) {
+      setTimeout(() => {
+        this.highlightAlertRow(targetAlertId);
+      }, 120);
+    }
+  },
+
+  highlightAlertRow(alertId) {
+    const row = document.getElementById(`alert-row-${alertId}`);
+    if (!row) return;
+
+    // Scroll target row to center smoothly
+    row.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    // Clear any existing highlights
+    document.querySelectorAll(".alert-row-highlight").forEach(el => {
+      el.classList.remove("alert-row-highlight");
+      if (el._highlightTimeout) clearTimeout(el._highlightTimeout);
+    });
+
+    // Apply glowing highlight
+    row.classList.add("alert-row-highlight");
+
+    // Remove highlight after 3.8 seconds
+    row._highlightTimeout = setTimeout(() => {
+      row.classList.remove("alert-row-highlight");
+    }, 3800);
   },
 
   markAsRead(id) {
@@ -140,9 +209,12 @@ const VajraAlerts = {
 
     const timestamp = `${new Date().toLocaleTimeString('en-GB', { hour12: false })} IST - Today`;
 
+    const historyId = `ALT-${Date.now().toString().slice(-6)}`;
+
     // 1. Add notification
     const newNotif = {
       id: `notif-${Date.now()}`,
+      alert_history_id: historyId,
       title: `CAP BROADCAST TRANSMITTED: ${r.village}`,
       message: `ITU X.1303 CAP XML dispatched to C-DOT CBE. Cell broadcast active across ${r.district}. Population exposed: ~${exp.population_in_zone || 0}.`,
       timestamp: timestamp,
@@ -155,7 +227,7 @@ const VajraAlerts = {
 
     // 2. Log in Alert History Database
     const historyEntry = {
-      id: `ALT-${Date.now().toString().slice(-6)}`,
+      id: historyId,
       timestamp: timestamp,
       location: `${r.village}, ${r.district}`,
       district: r.district,
@@ -198,7 +270,7 @@ const VajraAlerts = {
     }
 
     historyTableBody.innerHTML = entries.map(e => `
-      <tr>
+      <tr id="alert-row-${e.id}" data-alert-id="${e.id}">
         <td><strong>${e.timestamp}</strong></td>
         <td><strong>${e.location}</strong></td>
         <td>${e.hazard_type}</td>

@@ -801,6 +801,7 @@ const VAJRA_DATA = {
   NOTIFICATIONS: [
     {
       id: "notif-101",
+      alert_history_id: "ALT-2026-0927-01",
       title: "ML ALERT: Uttarkashi Orange Alert (Bhatwari)",
       message: "VAJRA Model vajra-v1.0: Bhatwari (UK-SU-20820) reached 82% risk score [Orange Alert]. 3.5h expected lead time to impact.",
       timestamp: "14:30 UTC - Today",
@@ -810,6 +811,7 @@ const VAJRA_DATA = {
     },
     {
       id: "notif-102",
+      alert_history_id: "ALT-2026-0927-02",
       title: "EXTREME WARNING: Wayanad Heavy Rain",
       message: "Meppadi Chooralmala slope unit reached 96% soil saturation index. 168mm rainfall.",
       timestamp: "00:45 IST - Today",
@@ -819,6 +821,7 @@ const VAJRA_DATA = {
     },
     {
       id: "notif-103",
+      alert_history_id: "ALT-2026-0926-04",
       title: "Weather Highlight: Uttarkashi 24h Rain Telemetry",
       message: "Uttarkashi rainfall telemetry: 142mm recorded in past 24 hours. Bhagirathi river water level monitored.",
       timestamp: "23:30 IST - Yesterday",
