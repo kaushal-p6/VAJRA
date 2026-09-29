@@ -68,13 +68,8 @@ const VajraMap = {
     // Add Default Basemap
     this.tileLayers.satellite.addTo(this.map);
 
-    // IMPROVEMENT: the map used to always open zoomed into Uttarkashi alone
-    // (MAP_INIT.center/zoom), which meant any critical (Red/Orange) zone
-    // outside that one district — e.g. the Wayanad, Kerala region, thousands
-    // of km away — was completely invisible on load with no indication it
-    // existed. Open on a view that fits every active region instead, so
-    // nothing critical is hidden by default; "Pilot View" below still jumps
-    // straight into the Uttarkashi detail view on demand.
+    // Dynamic Multi-Event Initialization: Fit bounds to encompass all 12 active
+    // disaster regions across India (Bihar, Maharashtra, Uttarakhand, UP, Odisha, Assam).
     const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
     if (allCenters.length > 1) {
       this.map.fitBounds(L.latLngBounds(allCenters), { padding: [60, 60], maxZoom: 7 });
@@ -85,7 +80,12 @@ const VajraMap = {
     }
 
     // Add Overlay Layer Groups to Map
-    Object.values(this.overlayLayers).forEach(layerGroup => layerGroup.addTo(this.map));
+    // Add Overlay Layer Groups to Map (hospitals & emergency facilities only show upon zoom-in >= 10)
+    Object.entries(this.overlayLayers).forEach(([key, layerGroup]) => {
+      if (key !== 'hospitals' && key !== 'emergency_facilities') {
+        layerGroup.addTo(this.map);
+      }
+    });
 
     this.map.on("zoom", () => {
       this.handleZoomLevelChange();
@@ -1078,10 +1078,21 @@ const VajraMap = {
 
     this.updateLegendVisibility();
 
-    // When viewing overview / whole map (zoom < 10), hide the local evacuation route, badge and safe zone shield
+    // When viewing overview / whole map (zoom < 10), hide local evacuation route, badge, safe zone shield, AND infrastructure pins
+    const hospCheckbox = document.getElementById("layer_hospitals");
+    const isHospChecked = !hospCheckbox || hospCheckbox.checked;
+    const emergCheckbox = document.getElementById("layer_emergency_facilities");
+    const isEmergChecked = !emergCheckbox || emergCheckbox.checked;
+
     if (isOverview) {
       if (this.map.hasLayer(this.overlayLayers.route_layer)) {
         this.map.removeLayer(this.overlayLayers.route_layer);
+      }
+      if (this.map.hasLayer(this.overlayLayers.hospitals)) {
+        this.map.removeLayer(this.overlayLayers.hospitals);
+      }
+      if (this.map.hasLayer(this.overlayLayers.emergency_facilities)) {
+        this.map.removeLayer(this.overlayLayers.emergency_facilities);
       }
     } else {
       const routeCheckbox = document.getElementById("layer_routes");
@@ -1089,6 +1100,12 @@ const VajraMap = {
         if (!this.map.hasLayer(this.overlayLayers.route_layer)) {
           this.overlayLayers.route_layer.addTo(this.map);
         }
+      }
+      if (isHospChecked && !this.map.hasLayer(this.overlayLayers.hospitals)) {
+        this.overlayLayers.hospitals.addTo(this.map);
+      }
+      if (isEmergChecked && !this.map.hasLayer(this.overlayLayers.emergency_facilities)) {
+        this.overlayLayers.emergency_facilities.addTo(this.map);
       }
     }
     this.updateMarkerDispersal();
@@ -1351,10 +1368,10 @@ const VajraMap = {
     } else if (layerId === "layer_contours") {
       this.toggleContourOverlay(isChecked);
     } else if (layerId === "layer_hospitals") {
-      if (isChecked) this.overlayLayers.hospitals.addTo(this.map);
+      if (isChecked && this.map.getZoom() >= 10) this.overlayLayers.hospitals.addTo(this.map);
       else this.map.removeLayer(this.overlayLayers.hospitals);
     } else if (layerId === "layer_emergency_facilities") {
-      if (isChecked) this.overlayLayers.emergency_facilities.addTo(this.map);
+      if (isChecked && this.map.getZoom() >= 10) this.overlayLayers.emergency_facilities.addTo(this.map);
       else this.map.removeLayer(this.overlayLayers.emergency_facilities);
     } else if (layerId === "layer_rivers") {
       if (isChecked) this.overlayLayers.rivers.addTo(this.map);

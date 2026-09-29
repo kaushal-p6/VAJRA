@@ -110,30 +110,30 @@ const VajraUI = {
   },
 
   simulateMonsoonEvent() {
-    this.showToast("Simulating Torrential Cloudburst Event in Uttarkashi & Wayanad...", "warning");
+    this.showToast("Simulating Extreme Surge in Kosi Basin & Mumbai Metropolitan Area...", "warning");
 
-    const uttar = VAJRA_DATA.REGIONS.find(r => r.unit_id === "UK-SU-20820");
-    if (uttar && uttar.environmental_inputs) {
-      uttar.environmental_inputs.rainfall_24h_mm += 45;
-      uttar.environmental_inputs.rainfall_72h_mm += 45;
-      uttar.environmental_inputs.soil_moisture_pct = 98;
-      uttar.risk_score = 0.99;
-      uttar.risk_tier = "Red";
-      uttar.hazard_window_hours = "Elevated risk expected during next 1-2 hours";
+    const kosi = VAJRA_DATA.REGIONS.find(r => r.unit_id === "slope_unit_10820");
+    if (kosi && kosi.environmental_inputs) {
+      kosi.environmental_inputs.rainfall_24h_mm += 45;
+      kosi.environmental_inputs.rainfall_72h_mm += 45;
+      kosi.environmental_inputs.soil_moisture_pct = 99;
+      kosi.risk_score = 0.99;
+      kosi.risk_tier = "Red";
+      kosi.hazard_window_hours = "Critical embankment failure in active progress";
     }
 
-    const wayanad = VAJRA_DATA.REGIONS.find(r => r.unit_id === "KL-WY-10492");
-    if (wayanad && wayanad.environmental_inputs) {
-      wayanad.environmental_inputs.rainfall_24h_mm += 50;
-      wayanad.environmental_inputs.rainfall_72h_mm += 50;
-      wayanad.environmental_inputs.soil_moisture_pct = 99;
-      wayanad.risk_score = 0.97;
-      wayanad.risk_tier = "Red";
-      wayanad.hazard_window_hours = "Elevated risk expected during next 1-2 hours";
+    const mumbai = VAJRA_DATA.REGIONS.find(r => r.unit_id === "MH-MM-40100");
+    if (mumbai && mumbai.environmental_inputs) {
+      mumbai.environmental_inputs.rainfall_24h_mm += 50;
+      mumbai.environmental_inputs.rainfall_72h_mm += 50;
+      mumbai.environmental_inputs.soil_moisture_pct = 98;
+      mumbai.risk_score = 0.97;
+      mumbai.risk_tier = "Red";
+      mumbai.hazard_window_hours = "Flash deluge cresting in next 1 hour";
     }
 
     VajraMap.renderOperationalOverlays();
-    if (uttar) VajraMap.selectRegion(uttar, true);
+    if (kosi) VajraMap.selectRegion(kosi, true);
 
     VajraAlerts.updateEmergencyBanner();
     this.updateKPICards();
@@ -143,7 +143,7 @@ const VajraUI = {
     }
 
     VajraAlerts.playAudioAlert();
-    VajraAlerts.openEmergencyDispatchModal(uttar);
+    VajraAlerts.openEmergencyDispatchModal(kosi);
   },
 
   openLoginModal() {

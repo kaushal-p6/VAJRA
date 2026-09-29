@@ -9,14 +9,16 @@ const VAJRA_CONFIG = {
 
   // Primary Pilot Region & ML Model Scope
   ML_MODEL_SCOPE: {
-    PILOT_REGION: "Uttarkashi, Uttarakhand",
-    MODEL_NAME: "VAJRA Landslide Hazard Prediction Model v1.0",
-    MODEL_TYPE: "Spatial Slope-Unit Gradient Boosting Classifier",
-    TRAINED_ON: "GSI Landslide Atlas & IMERG Rainfall Records (2010–2025)",
-    // NOTE: kept in sync with the unit_ids actually defined in js/data.js's
-    // VAJRA_DATA.REGIONS — a 5th "UK-SU-20824" was previously listed here
-    // with no matching region object.
-    VALIDATED_AREAS: ["UK-SU-20820", "UK-SU-20821", "UK-SU-20822", "UK-SU-20823"]
+    PILOT_REGION: "Kosi Basin & Multi-Hazard National Grid",
+    MODEL_NAME: "VAJRA Multi-Hazard Prediction Engine v1.0",
+    MODEL_TYPE: "Spatial Hydro-Geological Gradient Boosting Classifier",
+    TRAINED_ON: "GSI Landslide Atlas, CWC River Stage & IMERG Telemetry Records",
+    // Strictly synchronized with the 12 active verified disaster regions
+    VALIDATED_AREAS: [
+      "slope_unit_10820", "BR-WC-10830", "MH-MM-40100", "MH-PN-40200",
+      "UK-SU-20820", "BR-ST-10840", "UK-CH-30112", "UP-GK-50110",
+      "OD-SB-60100", "MH-NS-40300", "AS-LK-80130", "MH-PL-40400"
+    ]
   },
 
   // Map Initialization (Centered on Uttarkashi Pilot Zone)
