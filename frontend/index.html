@@ -579,7 +579,10 @@
         </div>
 
         <div class="search-filter-box">
-          <input type="text" class="search-input" id="search-input" placeholder="Search ANY city/district in India (e.g. Darbhanga, Mumbai, Uttarkashi)..." oninput="VajraAnalyze.handleSearch(this.value)">
+          <div class="search-input-wrapper" id="search-input-wrapper">
+            <input type="text" class="search-input" id="search-input" placeholder="Search city, district, or sector across India..." oninput="VajraAnalyze.handleSearch(this.value)">
+            <span class="search-inline-spinner" id="search-inline-spinner" title="Searching live telemetry..."></span>
+          </div>
 
           <select class="filter-select" id="tier-filter-select" onchange="VajraAnalyze.handleTierFilter(this.value)">
             <option value="ALL">All Hazard Tiers</option>

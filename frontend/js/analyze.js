@@ -11,6 +11,8 @@ const VajraAnalyze = {
   currentPage: 1,
   pageSize: 10, // Strictly 10 rows per page
   searchTerm: "",
+  isSearching: false,
+  activeSearchQuery: "",
   tierFilter: "ALL",
   coverageFilter: "ALL",
   chartInstance: null,
@@ -24,14 +26,28 @@ const VajraAnalyze = {
     // Strictly display the 12 active verified disaster events
     this.liveDynamicRegions = [...(VAJRA_DATA.REGIONS || [])];
     this.isAllChartsView = true;
+    this.isSearching = false;
+    this.activeSearchQuery = "";
     this.render();
+  },
+
+  escapeHtml(str) {
+    if (!str) return "";
+    return String(str)
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
   },
 
   // Master Synchronized Render Pipeline
   render() {
     this.renderTable();
-    this.renderChart();
-    this.renderTierDistribution();
+    if (!this.isSearching) {
+      this.renderChart();
+      this.renderTierDistribution();
+    }
     this.renderNationwideExtremes();
   },
 
@@ -63,7 +79,7 @@ const VajraAnalyze = {
 
     const badgeTotal = document.getElementById("tier-dist-total-badge");
     if (badgeTotal) {
-      badgeTotal.textContent = `${data.length} Total Units`;
+      badgeTotal.textContent = this.isSearching ? "Searching..." : `${data.length} Total Units`;
     }
   },
 
@@ -82,30 +98,75 @@ const VajraAnalyze = {
     this.searchTerm = term.trim().toLowerCase();
     this.currentPage = 1;
 
-    if (this.searchDebounceTimer) clearTimeout(this.searchDebounceTimer);
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = null;
+    }
 
-    this.render();
+    if (!this.searchTerm) {
+      this.isSearching = false;
+      this.activeSearchQuery = "";
+      this.updateSearchInputState(false);
+      this.render();
+      return;
+    }
 
-    if (this.searchTerm.length >= 3) {
+    // Check if any existing loaded region matches immediately
+    const hasLocalMatch = this.liveDynamicRegions.some(r =>
+      (r.village && r.village.toLowerCase().includes(this.searchTerm)) ||
+      (r.district && r.district.toLowerCase().includes(this.searchTerm)) ||
+      (r.state && r.state.toLowerCase().includes(this.searchTerm)) ||
+      (r.search_alias && r.search_alias.includes(this.searchTerm))
+    );
+
+    if (hasLocalMatch) {
+      this.isSearching = false;
+      this.activeSearchQuery = this.searchTerm;
+      this.updateSearchInputState(false);
+      this.render();
+      return;
+    }
+
+    // If no local match and query is >= 2 chars, enter searching/loading state immediately
+    if (this.searchTerm.length >= 2) {
+      this.isSearching = true;
+      const targetQuery = this.searchTerm;
+      this.activeSearchQuery = targetQuery;
+      this.updateSearchInputState(true);
+      this.render();
+
       this.searchDebounceTimer = setTimeout(async () => {
-        const localMatch = this.liveDynamicRegions.some(r =>
-          (r.village && r.village.toLowerCase().includes(this.searchTerm)) ||
-          (r.district && r.district.toLowerCase().includes(this.searchTerm)) ||
-          (r.state && r.state.toLowerCase().includes(this.searchTerm))
-        );
-
-        if (!localMatch) {
-          await this.searchOpenStreetMapIndia(this.searchTerm);
-          this.render();
+        try {
+          await this.searchOpenStreetMapIndia(targetQuery);
+        } catch (err) {
+          console.error("OSM Telemetry Search Error:", err);
+        } finally {
+          // If query hasn't changed while awaiting response
+          if (this.searchTerm === targetQuery) {
+            this.isSearching = false;
+            this.updateSearchInputState(false);
+            this.render();
+          }
         }
-      }, 450);
+      }, 350);
+    } else {
+      this.isSearching = false;
+      this.updateSearchInputState(false);
+      this.render();
+    }
+  },
+
+  updateSearchInputState(searching) {
+    const wrapper = document.getElementById("search-input-wrapper");
+    if (wrapper) {
+      wrapper.classList.toggle("is-searching", !!searching);
     }
   },
 
   async searchOpenStreetMapIndia(query) {
     try {
       const url = `https://nominatim.openstreetmap.org/search?format=json&countrycodes=in&q=${encodeURIComponent(query)}`;
-      const response = await fetch(url);
+      const response = await fetch(url, { headers: { "Accept-Language": "en" } });
       if (!response.ok) return;
 
       const results = await response.json();
@@ -118,8 +179,8 @@ const VajraAnalyze = {
 
         const displayNameParts = place.display_name.split(",");
         const village = displayNameParts[0] || query;
-        const district = displayNameParts[1] ? displayNameParts[1].trim() : "India Sector";
-        const state = displayNameParts[displayNameParts.length - 2] ? displayNameParts[displayNameParts.length - 2].trim() : "India";
+        const district = displayNameParts[1] ? displayNameParts[1].trim() : (displayNameParts[0] || "India Sector");
+        const state = displayNameParts.length >= 2 ? displayNameParts[displayNameParts.length - 2].trim() : "India";
 
         let riskScore = 0.25;
         let riskTier = "Green";
@@ -127,11 +188,21 @@ const VajraAnalyze = {
         else if (weather.rainfall > 80) { riskScore = 0.74; riskTier = "Orange"; }
         else if (weather.rainfall > 40) { riskScore = 0.52; riskTier = "Yellow"; }
 
+        // Deduplicate if already present
+        const existingIdx = this.liveDynamicRegions.findIndex(r => 
+          (r.village && r.village.toLowerCase() === village.toLowerCase()) ||
+          (r.search_alias && r.search_alias === query.toLowerCase())
+        );
+        if (existingIdx !== -1) {
+          return;
+        }
+
         const newLiveRegion = {
           unit_id: `IN-LIVE-${Date.now()}`,
           village: village,
           district: district,
           state: state,
+          search_alias: query.toLowerCase(),
           watershed_id: "REGIONAL-WS",
           hazard_type: "Weather Telemetry",
           is_ml_validated: false,
@@ -157,7 +228,9 @@ const VajraAnalyze = {
         };
 
         this.liveDynamicRegions.unshift(newLiveRegion);
-        VajraUI.showToast(`Fetched Live Telemetry for ${village}, India`, "success");
+        if (typeof VajraUI !== "undefined") {
+          VajraUI.showToast(`Fetched Live Telemetry for ${village}, India`, "success");
+        }
       }
     } catch (e) {
       console.log("OSM Geocoding Error:", e);
@@ -195,6 +268,13 @@ const VajraAnalyze = {
 
   resetFilters() {
     this.searchTerm = "";
+    this.isSearching = false;
+    this.activeSearchQuery = "";
+    this.updateSearchInputState(false);
+    if (this.searchDebounceTimer) {
+      clearTimeout(this.searchDebounceTimer);
+      this.searchDebounceTimer = null;
+    }
     this.tierFilter = "ALL";
     this.coverageFilter = "ALL";
     this.currentPage = 1;
@@ -248,7 +328,8 @@ const VajraAnalyze = {
       data = data.filter(r =>
         (r.village && r.village.toLowerCase().includes(this.searchTerm)) ||
         (r.district && r.district.toLowerCase().includes(this.searchTerm)) ||
-        (r.state && r.state.toLowerCase().includes(this.searchTerm))
+        (r.state && r.state.toLowerCase().includes(this.searchTerm)) ||
+        (r.search_alias && r.search_alias.includes(this.searchTerm))
       );
     }
 
@@ -309,12 +390,31 @@ const VajraAnalyze = {
       }
     });
 
+    if (this.isSearching) {
+      tableBody.innerHTML = `
+        <tr>
+          <td colspan="11" style="text-align: center; padding: 3rem 1.5rem;">
+            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.85rem;">
+              <div class="vajra-search-loader"></div>
+              <div style="font-weight: 700; font-size: 1rem; color: #1e293b;">Searching telemetry & geospatial stations...</div>
+              <div style="font-size: 0.83rem; color: #64748b; max-width: 520px; line-height: 1.5;">
+                Querying live national weather, river stage, and topographic telemetry for &ldquo;<strong>${this.escapeHtml(this.searchTerm)}</strong>&rdquo; across India.
+              </div>
+            </div>
+          </td>
+        </tr>
+      `;
+      if (paginationInfo) paginationInfo.textContent = `Searching telemetry records for "${this.escapeHtml(this.searchTerm)}"...`;
+      if (paginationControls) paginationControls.innerHTML = "";
+      return;
+    }
+
     if (pageData.length === 0) {
       tableBody.innerHTML = `
         <tr>
           <td colspan="11" style="text-align: center; padding: 2.5rem; color: #64748b;">
             <div style="font-weight: 700; font-size: 0.95rem; color: #1e293b; margin-bottom: 4px;">No matching telemetry records found</div>
-            <div style="font-size: 0.82rem;">Try clearing search "${this.searchTerm}" or changing the active risk tier filter.</div>
+            <div style="font-size: 0.82rem;">Try clearing search "${this.escapeHtml(this.searchTerm)}" or changing the active risk tier filter.</div>
           </td>
         </tr>
       `;
@@ -402,6 +502,14 @@ const VajraAnalyze = {
     const lowestBox = document.getElementById("nationwide-lowest-rain");
     const synthBox = document.getElementById("nationwide-synthesis");
     if (!highestBox || !lowestBox) return;
+
+    if (this.isSearching) {
+      const searchingHtml = '<div style="color: #64748b; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; padding: 0.35rem 0;"><span class="vajra-mini-spinner"></span> Searching regional stations...</div>';
+      highestBox.innerHTML = searchingHtml;
+      lowestBox.innerHTML = searchingHtml;
+      if (synthBox) synthBox.innerHTML = '<div style="color: #64748b; font-size: 0.82rem; display: flex; align-items: center; gap: 8px; padding: 0.35rem 0;"><span class="vajra-mini-spinner"></span> Synthesizing telemetry...</div>';
+      return;
+    }
 
     const allData = this.getFilteredAndSortedData();
     if (allData.length === 0) {
