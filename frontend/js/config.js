@@ -21,12 +21,16 @@ const VAJRA_CONFIG = {
     ]
   },
 
-  // Map Initialization (Centered on Uttarkashi Pilot Zone)
+  // Map Initialization (National Overview of India)
   MAP_INIT: {
-    center: [30.9000, 78.4000],
-    zoom: 9,
-    minZoom: 4,
-    maxZoom: 18
+    center: [22.0000, 82.8000],
+    zoom: 5,
+    minZoom: 3.5,
+    maxZoom: 18,
+    indiaBounds: [
+      [6.8, 68.0],
+      [37.2, 97.5]
+    ]
   },
 
   // Basemap Tile Providers

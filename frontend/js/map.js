@@ -37,6 +37,8 @@ const VajraMap = {
     this.map = L.map("map", {
       minZoom: VAJRA_CONFIG.MAP_INIT.minZoom,
       maxZoom: VAJRA_CONFIG.MAP_INIT.maxZoom,
+      zoomSnap: 0.25,
+      zoomDelta: 0.5,
       zoomControl: false
     });
 
@@ -68,16 +70,23 @@ const VajraMap = {
     // Add Default Basemap
     this.tileLayers.satellite.addTo(this.map);
 
-    // Dynamic Multi-Event Initialization: Fit bounds to encompass all 12 active
-    // disaster regions across India (Bihar, Maharashtra, Uttarakhand, UP, Odisha, Assam).
-    const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
-    if (allCenters.length > 1) {
-      this.map.fitBounds(L.latLngBounds(allCenters), { padding: [60, 60], maxZoom: 7 });
-    } else if (allCenters.length === 1) {
-      this.map.setView(allCenters[0], 9);
-    } else {
-      this.map.setView(VAJRA_CONFIG.MAP_INIT.center, VAJRA_CONFIG.MAP_INIT.zoom);
-    }
+    // National Overview Initialization: Ensure complete visibility of all India
+    // (from Kashmir / Ladakh down to Kanyakumari / Indian Ocean in the south, and Gujarat to Assam/Arunachal).
+    const indiaNationalBounds = L.latLngBounds(
+      (VAJRA_CONFIG.MAP_INIT && VAJRA_CONFIG.MAP_INIT.indiaBounds) || [
+        [6.8, 68.0],
+        [37.2, 97.5]
+      ]
+    );
+    this.map.fitBounds(indiaNationalBounds, { padding: [15, 15] });
+
+    // Safeguard for dynamic layout recalculation after full DOM render
+    setTimeout(() => {
+      if (this.map) {
+        this.map.invalidateSize();
+        this.map.fitBounds(indiaNationalBounds, { padding: [15, 15] });
+      }
+    }, 200);
 
     // Add Overlay Layer Groups to Map
     // Add Overlay Layer Groups to Map (hospitals & emergency facilities only show upon zoom-in >= 10)
@@ -105,6 +114,7 @@ const VajraMap = {
     this.renderOperationalOverlays();
     this.handleZoomLevelChange();
     this.updateMarkerDispersal();
+    this.initLegendHover();
   },
 
 
@@ -671,18 +681,25 @@ const VajraMap = {
     if (legendEl) legendEl.style.display = "flex";
     if (toggleBtn) toggleBtn.style.display = "none";
 
-    const allCenters = VAJRA_DATA.REGIONS.map(r => r.center);
-    if (!this.map || allCenters.length === 0) return;
-    if (allCenters.length === 1) {
-      this.map.flyTo(allCenters[0], 9, { duration: 1.2 });
-    } else {
-      this.map.flyToBounds(L.latLngBounds(allCenters), { padding: [60, 60], maxZoom: 7, duration: 1.2 });
-    }
+    if (!this.map) return;
+    const indiaNationalBounds = L.latLngBounds(
+      (VAJRA_CONFIG.MAP_INIT && VAJRA_CONFIG.MAP_INIT.indiaBounds) || [
+        [6.8, 68.0],
+        [37.2, 97.5]
+      ]
+    );
+    this.map.flyToBounds(indiaNationalBounds, { padding: [15, 15], duration: 1.2 });
   },
 
   focusPilotRegion() {
     if (!this.map) return;
-    this.map.flyTo(VAJRA_CONFIG.MAP_INIT.center, VAJRA_CONFIG.MAP_INIT.zoom, { duration: 1.2 });
+    const indiaNationalBounds = L.latLngBounds(
+      (VAJRA_CONFIG.MAP_INIT && VAJRA_CONFIG.MAP_INIT.indiaBounds) || [
+        [6.8, 68.0],
+        [37.2, 97.5]
+      ]
+    );
+    this.map.flyToBounds(indiaNationalBounds, { padding: [15, 15], duration: 1.2 });
   },
 
   toggleLayersDrawer() {
@@ -1015,6 +1032,60 @@ const VajraMap = {
 
   // Legend visibility & collapsible toggle state
   isLegendManuallyOpened: false,
+  isLegendHovered: false,
+
+  initLegendHover() {
+    const container = document.getElementById("map-legend-container");
+    const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    const legendEl = document.getElementById("map-legend");
+    if (!container || !toggleBtn || !legendEl) return;
+
+    let hoverLeaveTimeout = null;
+
+    const handleEnter = () => {
+      let isOverview = true;
+      if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
+        isOverview = this.maplibreInstance.getZoom() < 10.2;
+      } else if (this.map) {
+        isOverview = this.map.getZoom() < 10;
+      }
+
+      // Responsive hover-expand in zoomed-in mode
+      if (!isOverview) {
+        if (hoverLeaveTimeout) {
+          clearTimeout(hoverLeaveTimeout);
+          hoverLeaveTimeout = null;
+        }
+        this.isLegendHovered = true;
+        legendEl.style.display = "flex";
+        toggleBtn.style.display = "none";
+        container.classList.add("is-hover-expanded");
+      }
+    };
+
+    const handleLeave = () => {
+      let isOverview = true;
+      if (this.activeBasemap === 'maptiler_hybrid' && this.maplibreInstance) {
+        isOverview = this.maplibreInstance.getZoom() < 10.2;
+      } else if (this.map) {
+        isOverview = this.map.getZoom() < 10;
+      }
+
+      // Automatically shrink back when cursor leaves in zoomed-in mode
+      if (!isOverview && !this.isLegendManuallyOpened) {
+        if (hoverLeaveTimeout) clearTimeout(hoverLeaveTimeout);
+        hoverLeaveTimeout = setTimeout(() => {
+          this.isLegendHovered = false;
+          legendEl.style.display = "none";
+          toggleBtn.style.display = "flex";
+          container.classList.remove("is-hover-expanded");
+        }, 150);
+      }
+    };
+
+    container.addEventListener("mouseenter", handleEnter);
+    container.addEventListener("mouseleave", handleLeave);
+  },
 
   updateLegendVisibility() {
     let isOverview = true;
@@ -1026,21 +1097,27 @@ const VajraMap = {
 
     const legendEl = document.getElementById("map-legend");
     const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    const container = document.getElementById("map-legend-container");
     if (!legendEl || !toggleBtn) return;
 
     if (isOverview) {
       // In overview / whole map view: automatically show legend, hide arrow toggle
       this.isLegendManuallyOpened = false;
+      this.isLegendHovered = false;
       legendEl.style.display = "flex";
       toggleBtn.style.display = "none";
+      if (container) container.classList.remove("is-zoomed-in", "is-hover-expanded");
     } else {
       // In zoomed-in view: automatically hide legend, show arrow toggle in leftmost part
-      if (this.isLegendManuallyOpened) {
+      if (container) container.classList.add("is-zoomed-in");
+      if (this.isLegendManuallyOpened || this.isLegendHovered) {
         legendEl.style.display = "flex";
         toggleBtn.style.display = "none";
+        if (container) container.classList.add("is-hover-expanded");
       } else {
         legendEl.style.display = "none";
         toggleBtn.style.display = "flex";
+        if (container) container.classList.remove("is-hover-expanded");
       }
     }
   },
@@ -1052,16 +1129,23 @@ const VajraMap = {
       this.isLegendManuallyOpened = !this.isLegendManuallyOpened;
     }
 
+    if (!this.isLegendManuallyOpened) {
+      this.isLegendHovered = false;
+    }
+
     const legendEl = document.getElementById("map-legend");
     const toggleBtn = document.getElementById("map-legend-toggle-btn");
+    const container = document.getElementById("map-legend-container");
     if (!legendEl || !toggleBtn) return;
 
     if (this.isLegendManuallyOpened) {
       legendEl.style.display = "flex";
       toggleBtn.style.display = "none";
+      if (container) container.classList.add("is-hover-expanded");
     } else {
       legendEl.style.display = "none";
       toggleBtn.style.display = "flex";
+      if (container) container.classList.remove("is-hover-expanded");
     }
   },
 

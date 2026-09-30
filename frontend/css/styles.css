@@ -797,12 +797,17 @@ h1, h2, h3, h4, h5, h6 {
   border: 1px solid #94a3b8;
 }
 
-/* Map Legend — Compact Design & Auto-Hide */
-.map-legend {
+/* Map Legend Container — Responsive Hover & Auto-Hide */
+.map-legend-container {
   position: absolute;
   bottom: 12px;
   left: 12px;
   z-index: 500;
+  display: inline-flex;
+}
+
+.map-legend {
+  position: relative;
   background: rgba(255, 255, 255, 0.96);
   backdrop-filter: blur(8px);
   padding: 0.35rem 0.65rem 0.4rem 0.65rem;
@@ -814,6 +819,21 @@ h1, h2, h3, h4, h5, h6 {
   gap: 0.25rem;
   font-size: 0.7rem;
   transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.map-legend-container.is-zoomed-in .map-legend {
+  animation: legendSlideIn 0.18s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes legendSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(4px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .legend-header {
@@ -892,10 +912,7 @@ h1, h2, h3, h4, h5, h6 {
 
 /* Arrow Toggle Button in Leftmost Part */
 .map-legend-toggle-btn {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  z-index: 500;
+  position: relative;
   background: rgba(255, 255, 255, 0.95);
   backdrop-filter: blur(8px);
   border: 1px solid #cbd5e1;
@@ -3219,11 +3236,15 @@ h1, h2, h3, h4, h5, h6 {
     flex-shrink: 0;
   }
 
-  .map-legend {
+  .map-legend-container {
     bottom: 8px;
     left: 8px;
     right: 8px;
     max-width: calc(100% - 16px);
+  }
+
+  .map-legend {
+    width: 100%;
     padding: 5px 8px;
     font-size: 0.7rem;
   }

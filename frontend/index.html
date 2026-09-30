@@ -355,29 +355,31 @@
             </div>
           </div>
 
-          <!-- Dynamic Legend with Collapsible Toggle Arrow -->
-          <button class="map-legend-toggle-btn" id="map-legend-toggle-btn" onclick="VajraMap.toggleLegend(true)" title="Show Risk Level Legend" aria-label="Show Risk Level Legend">
-            <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-            <span>Legend</span>
-          </button>
+          <!-- Dynamic Legend with Collapsible Hover/Toggle Container -->
+          <div class="map-legend-container" id="map-legend-container">
+            <button class="map-legend-toggle-btn" id="map-legend-toggle-btn" onclick="VajraMap.toggleLegend(true)" title="Show Risk Level Legend" aria-label="Show Risk Level Legend">
+              <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="9 18 15 12 9 6"></polyline>
+              </svg>
+              <span>Legend</span>
+            </button>
 
-          <div class="map-legend" id="map-legend">
-            <div class="legend-header">
-              <div class="legend-title">Risk Level Legend</div>
-              <button class="legend-collapse-btn" onclick="VajraMap.toggleLegend(false)" title="Hide Legend" aria-label="Hide Legend">
-                <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
-              </button>
-            </div>
-            <div class="legend-items">
-              <div class="legend-item"><span class="legend-dot red"></span> Extreme <span id="legend-count-red" class="legend-count">0</span></div>
-              <div class="legend-item"><span class="legend-dot orange"></span> High <span id="legend-count-orange" class="legend-count">0</span></div>
-              <div class="legend-item"><span class="legend-dot yellow"></span> Moderate <span id="legend-count-yellow" class="legend-count">0</span></div>
-              <div class="legend-item"><span class="legend-dot green"></span> Low <span id="legend-count-green" class="legend-count">0</span></div>
+            <div class="map-legend" id="map-legend">
+              <div class="legend-header">
+                <div class="legend-title">Risk Level Legend</div>
+                <button class="legend-collapse-btn" onclick="VajraMap.toggleLegend(false)" title="Hide Legend" aria-label="Hide Legend">
+                  <svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                  </svg>
+                </button>
+              </div>
+              <div class="legend-items">
+                <div class="legend-item"><span class="legend-dot red"></span> Extreme <span id="legend-count-red" class="legend-count">0</span></div>
+                <div class="legend-item"><span class="legend-dot orange"></span> High <span id="legend-count-orange" class="legend-count">0</span></div>
+                <div class="legend-item"><span class="legend-dot yellow"></span> Moderate <span id="legend-count-yellow" class="legend-count">0</span></div>
+                <div class="legend-item"><span class="legend-dot green"></span> Low <span id="legend-count-green" class="legend-count">0</span></div>
+              </div>
             </div>
           </div>
         </div>
